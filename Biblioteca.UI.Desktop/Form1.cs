@@ -1,0 +1,142 @@
+// EN: Biblioteca.UI.Desktop/Form1.cs
+
+using Biblioteca.Domain.Services;
+using Biblioteca.Domain.Model;
+using Biblioteca.DTOs;
+
+namespace Biblioteca.UI.Desktop
+{
+    public partial class Form1 : Form
+    {
+        private readonly GeneroService _generoService;
+
+        public Form1()
+        {
+            InitializeComponent();
+            _generoService = new GeneroService();
+        }
+
+        private void Form1_Load(object sender, EventArgs e)
+        {
+            CargarGeneros();
+        }
+
+        // --- EVENTO NUEVO: SelectionChanged ---
+        private void dgvGeneros_SelectionChanged(object sender, EventArgs e)
+        {
+            // Verificamos si hay alguna fila seleccionada.
+            if (dgvGeneros.SelectedRows.Count > 0)
+            {
+                // Obtenemos el objeto DTO de la fila seleccionada.
+                var generoSeleccionado = (GeneroDto)dgvGeneros.SelectedRows[0].DataBoundItem;
+
+                // Ponemos el nombre del género en el TextBox para que el usuario pueda editarlo.
+                txtNombreGenero.Text = generoSeleccionado.Nombre;
+            }
+        }
+
+        private void btnAgregar_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                var nuevoGenero = new Genero(0, txtNombreGenero.Text);
+                _generoService.Add(nuevoGenero);
+                MessageBox.Show("Género agregado con éxito.");
+                CargarGeneros();
+            }
+            catch (ArgumentException ex)
+            {
+                MessageBox.Show(ex.Message, "Error de validación", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        // --- EVENTO NUEVO: Click del botón Modificar ---
+        private void btnModificar_Click(object sender, EventArgs e)
+        {
+            if (dgvGeneros.SelectedRows.Count == 0)
+            {
+                MessageBox.Show("Por favor, seleccione un género para modificar.", "Atención", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            try
+            {
+                // 1. Obtenemos el ID del género seleccionado.
+                var generoSeleccionado = (GeneroDto)dgvGeneros.SelectedRows[0].DataBoundItem;
+
+                // 2. Creamos un nuevo objeto de dominio con el ID original y el nuevo nombre del TextBox.
+                var generoModificado = new Genero(generoSeleccionado.Id, txtNombreGenero.Text);
+
+                // 3. Llamamos al servicio de actualización.
+                bool resultado = _generoService.Update(generoModificado);
+
+                if (resultado)
+                {
+                    MessageBox.Show("Género modificado con éxito.");
+                    CargarGeneros(); // Refrescamos la grilla.
+                }
+                else
+                {
+                    MessageBox.Show("No se pudo encontrar el género para modificar.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+            }
+            catch (ArgumentException ex)
+            {
+                MessageBox.Show(ex.Message, "Error de validación", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        // --- EVENTO NUEVO: Click del botón Eliminar ---
+        private void btnEliminar_Click(object sender, EventArgs e)
+        {
+            if (dgvGeneros.SelectedRows.Count == 0)
+            {
+                MessageBox.Show("Por favor, seleccione un género para eliminar.", "Atención", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            // Pedimos confirmación antes de una acción destructiva.
+            var confirmacion = MessageBox.Show("¿Está seguro de que desea eliminar este género?", "Confirmar eliminación", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+
+            if (confirmacion == DialogResult.Yes)
+            {
+                var generoSeleccionado = (GeneroDto)dgvGeneros.SelectedRows[0].DataBoundItem;
+                bool resultado = _generoService.Delete(generoSeleccionado.Id);
+
+                if (resultado)
+                {
+                    MessageBox.Show("Género eliminado con éxito.");
+                    CargarGeneros();
+                }
+                else
+                {
+                    MessageBox.Show("No se pudo encontrar el género para eliminar.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+            }
+        }
+
+        private void CargarGeneros()
+        {
+            List<Genero> generosDelDominio = _generoService.GetAll();
+            List<GeneroDto> generosParaMostrar = generosDelDominio.Select(g => new GeneroDto
+            {
+                Id = g.Id,
+                Nombre = g.Nombre
+            }).ToList();
+
+            // Es una buena práctica limpiar el DataSource antes de reasignarlo.
+            dgvGeneros.DataSource = null;
+            dgvGeneros.DataSource = generosParaMostrar;
+
+            // Limpiamos el texto y la selección.
+            txtNombreGenero.Clear();
+        }
+
+        private void textBox1_TextChanged(object sender, EventArgs e)
+        {
+            // Puedes dejar vacío el método o agregar lógica si es necesaria
+            // Por ejemplo, habilitar/deshabilitar botones según si hay texto
+        }
+
+    }
+}

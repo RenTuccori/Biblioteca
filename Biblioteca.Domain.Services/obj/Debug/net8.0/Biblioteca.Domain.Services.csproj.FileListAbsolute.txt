@@ -1,0 +1,17 @@
+C:\Users\renzo\OneDrive\Escritorio\Facultad\Electivas\.NET\Biblioteca\Biblioteca.Domain.Services\bin\Debug\net8.0\Biblioteca.Domain.Services.deps.json
+C:\Users\renzo\OneDrive\Escritorio\Facultad\Electivas\.NET\Biblioteca\Biblioteca.Domain.Services\bin\Debug\net8.0\Biblioteca.Domain.Services.dll
+C:\Users\renzo\OneDrive\Escritorio\Facultad\Electivas\.NET\Biblioteca\Biblioteca.Domain.Services\bin\Debug\net8.0\Biblioteca.Domain.Services.pdb
+C:\Users\renzo\OneDrive\Escritorio\Facultad\Electivas\.NET\Biblioteca\Biblioteca.Domain.Services\bin\Debug\net8.0\Biblioteca.Data.dll
+C:\Users\renzo\OneDrive\Escritorio\Facultad\Electivas\.NET\Biblioteca\Biblioteca.Domain.Services\bin\Debug\net8.0\Biblioteca.Domain.Model.dll
+C:\Users\renzo\OneDrive\Escritorio\Facultad\Electivas\.NET\Biblioteca\Biblioteca.Domain.Services\bin\Debug\net8.0\Biblioteca.Data.pdb
+C:\Users\renzo\OneDrive\Escritorio\Facultad\Electivas\.NET\Biblioteca\Biblioteca.Domain.Services\bin\Debug\net8.0\Biblioteca.Domain.Model.pdb
+C:\Users\renzo\OneDrive\Escritorio\Facultad\Electivas\.NET\Biblioteca\Biblioteca.Domain.Services\obj\Debug\net8.0\Biblioteca.Domain.Services.csproj.AssemblyReference.cache
+C:\Users\renzo\OneDrive\Escritorio\Facultad\Electivas\.NET\Biblioteca\Biblioteca.Domain.Services\obj\Debug\net8.0\Biblioteca.Domain.Services.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\renzo\OneDrive\Escritorio\Facultad\Electivas\.NET\Biblioteca\Biblioteca.Domain.Services\obj\Debug\net8.0\Biblioteca.Domain.Services.AssemblyInfoInputs.cache
+C:\Users\renzo\OneDrive\Escritorio\Facultad\Electivas\.NET\Biblioteca\Biblioteca.Domain.Services\obj\Debug\net8.0\Biblioteca.Domain.Services.AssemblyInfo.cs
+C:\Users\renzo\OneDrive\Escritorio\Facultad\Electivas\.NET\Biblioteca\Biblioteca.Domain.Services\obj\Debug\net8.0\Biblioteca.Domain.Services.csproj.CoreCompileInputs.cache
+C:\Users\renzo\OneDrive\Escritorio\Facultad\Electivas\.NET\Biblioteca\Biblioteca.Domain.Services\obj\Debug\net8.0\Bibliote.E3533E6A.Up2Date
+C:\Users\renzo\OneDrive\Escritorio\Facultad\Electivas\.NET\Biblioteca\Biblioteca.Domain.Services\obj\Debug\net8.0\Biblioteca.Domain.Services.dll
+C:\Users\renzo\OneDrive\Escritorio\Facultad\Electivas\.NET\Biblioteca\Biblioteca.Domain.Services\obj\Debug\net8.0\refint\Biblioteca.Domain.Services.dll
+C:\Users\renzo\OneDrive\Escritorio\Facultad\Electivas\.NET\Biblioteca\Biblioteca.Domain.Services\obj\Debug\net8.0\Biblioteca.Domain.Services.pdb
+C:\Users\renzo\OneDrive\Escritorio\Facultad\Electivas\.NET\Biblioteca\Biblioteca.Domain.Services\obj\Debug\net8.0\ref\Biblioteca.Domain.Services.dll

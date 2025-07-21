@@ -1,0 +1,15 @@
+C:\Users\renzo\OneDrive\Escritorio\Facultad\Electivas\.NET\Biblioteca\Biblioteca.Data\bin\Debug\net8.0\Biblioteca.Data.deps.json
+C:\Users\renzo\OneDrive\Escritorio\Facultad\Electivas\.NET\Biblioteca\Biblioteca.Data\bin\Debug\net8.0\Biblioteca.Data.dll
+C:\Users\renzo\OneDrive\Escritorio\Facultad\Electivas\.NET\Biblioteca\Biblioteca.Data\bin\Debug\net8.0\Biblioteca.Data.pdb
+C:\Users\renzo\OneDrive\Escritorio\Facultad\Electivas\.NET\Biblioteca\Biblioteca.Data\bin\Debug\net8.0\Biblioteca.Domain.Model.dll
+C:\Users\renzo\OneDrive\Escritorio\Facultad\Electivas\.NET\Biblioteca\Biblioteca.Data\bin\Debug\net8.0\Biblioteca.Domain.Model.pdb
+C:\Users\renzo\OneDrive\Escritorio\Facultad\Electivas\.NET\Biblioteca\Biblioteca.Data\obj\Debug\net8.0\Biblioteca.Data.csproj.AssemblyReference.cache
+C:\Users\renzo\OneDrive\Escritorio\Facultad\Electivas\.NET\Biblioteca\Biblioteca.Data\obj\Debug\net8.0\Biblioteca.Data.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\renzo\OneDrive\Escritorio\Facultad\Electivas\.NET\Biblioteca\Biblioteca.Data\obj\Debug\net8.0\Biblioteca.Data.AssemblyInfoInputs.cache
+C:\Users\renzo\OneDrive\Escritorio\Facultad\Electivas\.NET\Biblioteca\Biblioteca.Data\obj\Debug\net8.0\Biblioteca.Data.AssemblyInfo.cs
+C:\Users\renzo\OneDrive\Escritorio\Facultad\Electivas\.NET\Biblioteca\Biblioteca.Data\obj\Debug\net8.0\Biblioteca.Data.csproj.CoreCompileInputs.cache
+C:\Users\renzo\OneDrive\Escritorio\Facultad\Electivas\.NET\Biblioteca\Biblioteca.Data\obj\Debug\net8.0\Bibliote.033E8769.Up2Date
+C:\Users\renzo\OneDrive\Escritorio\Facultad\Electivas\.NET\Biblioteca\Biblioteca.Data\obj\Debug\net8.0\Biblioteca.Data.dll
+C:\Users\renzo\OneDrive\Escritorio\Facultad\Electivas\.NET\Biblioteca\Biblioteca.Data\obj\Debug\net8.0\refint\Biblioteca.Data.dll
+C:\Users\renzo\OneDrive\Escritorio\Facultad\Electivas\.NET\Biblioteca\Biblioteca.Data\obj\Debug\net8.0\Biblioteca.Data.pdb
+C:\Users\renzo\OneDrive\Escritorio\Facultad\Electivas\.NET\Biblioteca\Biblioteca.Data\obj\Debug\net8.0\ref\Biblioteca.Data.dll

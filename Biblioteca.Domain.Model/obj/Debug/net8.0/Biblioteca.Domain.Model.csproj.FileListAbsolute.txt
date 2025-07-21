@@ -1,0 +1,11 @@
+C:\Users\renzo\OneDrive\Escritorio\Facultad\Electivas\.NET\Biblioteca\Biblioteca.Domain.Model\bin\Debug\net8.0\Biblioteca.Domain.Model.deps.json
+C:\Users\renzo\OneDrive\Escritorio\Facultad\Electivas\.NET\Biblioteca\Biblioteca.Domain.Model\bin\Debug\net8.0\Biblioteca.Domain.Model.dll
+C:\Users\renzo\OneDrive\Escritorio\Facultad\Electivas\.NET\Biblioteca\Biblioteca.Domain.Model\bin\Debug\net8.0\Biblioteca.Domain.Model.pdb
+C:\Users\renzo\OneDrive\Escritorio\Facultad\Electivas\.NET\Biblioteca\Biblioteca.Domain.Model\obj\Debug\net8.0\Biblioteca.Domain.Model.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\renzo\OneDrive\Escritorio\Facultad\Electivas\.NET\Biblioteca\Biblioteca.Domain.Model\obj\Debug\net8.0\Biblioteca.Domain.Model.AssemblyInfoInputs.cache
+C:\Users\renzo\OneDrive\Escritorio\Facultad\Electivas\.NET\Biblioteca\Biblioteca.Domain.Model\obj\Debug\net8.0\Biblioteca.Domain.Model.AssemblyInfo.cs
+C:\Users\renzo\OneDrive\Escritorio\Facultad\Electivas\.NET\Biblioteca\Biblioteca.Domain.Model\obj\Debug\net8.0\Biblioteca.Domain.Model.csproj.CoreCompileInputs.cache
+C:\Users\renzo\OneDrive\Escritorio\Facultad\Electivas\.NET\Biblioteca\Biblioteca.Domain.Model\obj\Debug\net8.0\Biblioteca.Domain.Model.dll
+C:\Users\renzo\OneDrive\Escritorio\Facultad\Electivas\.NET\Biblioteca\Biblioteca.Domain.Model\obj\Debug\net8.0\refint\Biblioteca.Domain.Model.dll
+C:\Users\renzo\OneDrive\Escritorio\Facultad\Electivas\.NET\Biblioteca\Biblioteca.Domain.Model\obj\Debug\net8.0\Biblioteca.Domain.Model.pdb
+C:\Users\renzo\OneDrive\Escritorio\Facultad\Electivas\.NET\Biblioteca\Biblioteca.Domain.Model\obj\Debug\net8.0\ref\Biblioteca.Domain.Model.dll
