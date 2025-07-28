@@ -15,7 +15,6 @@
         // Métodos para establecer y validar los datos.
         public void SetId(int id)
         {
-            // La validación puede ser tan simple o compleja como necesites.
             if (id < 0)
                 throw new ArgumentException("El Id no puede ser negativo.", nameof(id));
             Id = id;

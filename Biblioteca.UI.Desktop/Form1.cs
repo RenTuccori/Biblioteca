@@ -1,5 +1,3 @@
-// EN: Biblioteca.UI.Desktop/Form1.cs
-
 using Biblioteca.Domain.Services;
 using Biblioteca.Domain.Model;
 using Biblioteca.DTOs;
@@ -21,7 +19,6 @@ namespace Biblioteca.UI.Desktop
             CargarGeneros();
         }
 
-        // --- EVENTO NUEVO: SelectionChanged ---
         private void dgvGeneros_SelectionChanged(object sender, EventArgs e)
         {
             // Verificamos si hay alguna fila seleccionada.
@@ -50,7 +47,6 @@ namespace Biblioteca.UI.Desktop
             }
         }
 
-        // --- EVENTO NUEVO: Click del botón Modificar ---
         private void btnModificar_Click(object sender, EventArgs e)
         {
             if (dgvGeneros.SelectedRows.Count == 0)
@@ -85,8 +81,6 @@ namespace Biblioteca.UI.Desktop
                 MessageBox.Show(ex.Message, "Error de validación", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
-
-        // --- EVENTO NUEVO: Click del botón Eliminar ---
         private void btnEliminar_Click(object sender, EventArgs e)
         {
             if (dgvGeneros.SelectedRows.Count == 0)
@@ -124,18 +118,14 @@ namespace Biblioteca.UI.Desktop
                 Nombre = g.Nombre
             }).ToList();
 
-            // Es una buena práctica limpiar el DataSource antes de reasignarlo.
             dgvGeneros.DataSource = null;
             dgvGeneros.DataSource = generosParaMostrar;
 
-            // Limpiamos el texto y la selección.
             txtNombreGenero.Clear();
         }
 
         private void textBox1_TextChanged(object sender, EventArgs e)
         {
-            // Puedes dejar vacío el método o agregar lógica si es necesaria
-            // Por ejemplo, habilitar/deshabilitar botones según si hay texto
         }
 
     }

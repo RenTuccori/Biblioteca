@@ -15,3 +15,4 @@ C:\Users\renzo\OneDrive\Escritorio\Facultad\Electivas\.NET\Biblioteca\Biblioteca
 C:\Users\renzo\OneDrive\Escritorio\Facultad\Electivas\.NET\Biblioteca\Biblioteca.Domain.Services\obj\Debug\net8.0\refint\Biblioteca.Domain.Services.dll
 C:\Users\renzo\OneDrive\Escritorio\Facultad\Electivas\.NET\Biblioteca\Biblioteca.Domain.Services\obj\Debug\net8.0\Biblioteca.Domain.Services.pdb
 C:\Users\renzo\OneDrive\Escritorio\Facultad\Electivas\.NET\Biblioteca\Biblioteca.Domain.Services\obj\Debug\net8.0\ref\Biblioteca.Domain.Services.dll
+C:\Users\renzo\OneDrive\Escritorio\Facultad\Electivas\.NET\Biblioteca\Biblioteca.Domain.Services\obj\Debug\net8.0\Biblioteca.Domain.Services.sourcelink.json

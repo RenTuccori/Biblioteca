@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="9.0.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Biblioteca.Domain.Model\Biblioteca.Domain.Model.csproj" />
+    <ProjectReference Include="..\Biblioteca.Domain.Services\Biblioteca.Domain.Services.csproj" />
+    <ProjectReference Include="..\Biblioteca.DTOs\Biblioteca.DTOs.csproj" />
+  </ItemGroup>
+
+</Project>

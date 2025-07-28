@@ -9,3 +9,4 @@ C:\Users\renzo\OneDrive\Escritorio\Facultad\Electivas\.NET\Biblioteca\Biblioteca
 C:\Users\renzo\OneDrive\Escritorio\Facultad\Electivas\.NET\Biblioteca\Biblioteca.Domain.Model\obj\Debug\net8.0\refint\Biblioteca.Domain.Model.dll
 C:\Users\renzo\OneDrive\Escritorio\Facultad\Electivas\.NET\Biblioteca\Biblioteca.Domain.Model\obj\Debug\net8.0\Biblioteca.Domain.Model.pdb
 C:\Users\renzo\OneDrive\Escritorio\Facultad\Electivas\.NET\Biblioteca\Biblioteca.Domain.Model\obj\Debug\net8.0\ref\Biblioteca.Domain.Model.dll
+C:\Users\renzo\OneDrive\Escritorio\Facultad\Electivas\.NET\Biblioteca\Biblioteca.Domain.Model\obj\Debug\net8.0\Biblioteca.Domain.Model.sourcelink.json

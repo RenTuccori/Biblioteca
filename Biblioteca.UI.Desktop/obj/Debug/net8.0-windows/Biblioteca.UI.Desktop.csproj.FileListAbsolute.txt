@@ -24,3 +24,4 @@ C:\Users\renzo\OneDrive\Escritorio\Facultad\Electivas\.NET\Biblioteca\Biblioteca
 C:\Users\renzo\OneDrive\Escritorio\Facultad\Electivas\.NET\Biblioteca\Biblioteca.UI.Desktop\obj\Debug\net8.0-windows\Biblioteca.UI.Desktop.pdb
 C:\Users\renzo\OneDrive\Escritorio\Facultad\Electivas\.NET\Biblioteca\Biblioteca.UI.Desktop\obj\Debug\net8.0-windows\Biblioteca.UI.Desktop.genruntimeconfig.cache
 C:\Users\renzo\OneDrive\Escritorio\Facultad\Electivas\.NET\Biblioteca\Biblioteca.UI.Desktop\obj\Debug\net8.0-windows\ref\Biblioteca.UI.Desktop.dll
+C:\Users\renzo\OneDrive\Escritorio\Facultad\Electivas\.NET\Biblioteca\Biblioteca.UI.Desktop\obj\Debug\net8.0-windows\Biblioteca.UI.Desktop.sourcelink.json

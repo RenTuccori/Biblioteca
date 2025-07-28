@@ -9,3 +9,4 @@ C:\Users\renzo\OneDrive\Escritorio\Facultad\Electivas\.NET\Biblioteca\Biblioteca
 C:\Users\renzo\OneDrive\Escritorio\Facultad\Electivas\.NET\Biblioteca\Biblioteca.DTOs\obj\Debug\net8.0\refint\Biblioteca.DTOs.dll
 C:\Users\renzo\OneDrive\Escritorio\Facultad\Electivas\.NET\Biblioteca\Biblioteca.DTOs\obj\Debug\net8.0\Biblioteca.DTOs.pdb
 C:\Users\renzo\OneDrive\Escritorio\Facultad\Electivas\.NET\Biblioteca\Biblioteca.DTOs\obj\Debug\net8.0\ref\Biblioteca.DTOs.dll
+C:\Users\renzo\OneDrive\Escritorio\Facultad\Electivas\.NET\Biblioteca\Biblioteca.DTOs\obj\Debug\net8.0\Biblioteca.DTOs.sourcelink.json

@@ -13,3 +13,4 @@ C:\Users\renzo\OneDrive\Escritorio\Facultad\Electivas\.NET\Biblioteca\Biblioteca
 C:\Users\renzo\OneDrive\Escritorio\Facultad\Electivas\.NET\Biblioteca\Biblioteca.Data\obj\Debug\net8.0\refint\Biblioteca.Data.dll
 C:\Users\renzo\OneDrive\Escritorio\Facultad\Electivas\.NET\Biblioteca\Biblioteca.Data\obj\Debug\net8.0\Biblioteca.Data.pdb
 C:\Users\renzo\OneDrive\Escritorio\Facultad\Electivas\.NET\Biblioteca\Biblioteca.Data\obj\Debug\net8.0\ref\Biblioteca.Data.dll
+C:\Users\renzo\OneDrive\Escritorio\Facultad\Electivas\.NET\Biblioteca\Biblioteca.Data\obj\Debug\net8.0\Biblioteca.Data.sourcelink.json

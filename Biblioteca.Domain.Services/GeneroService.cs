@@ -9,19 +9,25 @@ namespace Biblioteca.Domain.Services
         // Método para obtener la lista completa de géneros.
         public List<Genero> GetAll()
         {
-            // Devolvemos una nueva lista para que el exterior no pueda modificar la original.
             return GeneroInMemory.Generos.ToList();
+        }
+
+        // Método para obtener un género por su ID.
+        
+        public Genero GetById(int id)
+        {
+            return GeneroInMemory.Generos.FirstOrDefault(g => g.Id == id) 
+                   ?? throw new KeyNotFoundException($"Género con ID {id} no encontrado.");
         }
 
         // Método para agregar un nuevo género.
         public void Add(Genero genero)
         {
-            // Asignamos un nuevo ID.
             genero.SetId(GetNextId());
             GeneroInMemory.Generos.Add(genero);
         }
 
-        // Función auxiliar para generar el próximo ID (igual que en tu ejemplo).
+        // Función auxiliar para generar el próximo ID.
         private int GetNextId()
         {
             if (GeneroInMemory.Generos.Count == 0)
@@ -31,36 +37,32 @@ namespace Biblioteca.Domain.Services
             return GeneroInMemory.Generos.Max(g => g.Id) + 1;
         }
 
+        // Metodo para actualizar un género existente.
         public bool Update(Genero generoAActualizar)
         {
-            // Buscamos el género existente en nuestra "base de datos" en memoria.
             Genero? generoExistente = GeneroInMemory.Generos.FirstOrDefault(g => g.Id == generoAActualizar.Id);
 
             if (generoExistente != null)
             {
-                // Si lo encontramos, actualizamos sus propiedades usando los setters del modelo.
-                // Esto asegura que las validaciones del dominio se apliquen.
                 generoExistente.SetNombre(generoAActualizar.Nombre);
-                return true; // Indicamos que la operación fue exitosa.
+                return true;
             }
 
-            return false; // Indicamos que no se encontró el género para actualizar.
+            return false;
         }
 
-        // --- MÉTODO NUEVO: DELETE ---
+        // Metodo para eliminar un género por ID.
         public bool Delete(int id)
         {
-            // Buscamos el género a eliminar.
             Genero? generoAEliminar = GeneroInMemory.Generos.FirstOrDefault(g => g.Id == id);
 
             if (generoAEliminar != null)
             {
-                // Si lo encontramos, lo removemos de la lista.
                 GeneroInMemory.Generos.Remove(generoAEliminar);
-                return true; // Éxito.
+                return true;
             }
 
-            return false; // No se encontró.
+            return false;
         }
     }
 }
