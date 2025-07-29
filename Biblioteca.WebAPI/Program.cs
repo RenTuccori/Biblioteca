@@ -268,4 +268,120 @@ app.MapDelete("/autores/{id}", (int id) =>
 
 // --- FIN DE ENDPOINTS PARA AUTORES ---
 
+// --- INICIO DE ENDPOINTS PARA LIBROS ---
+
+// Endpoint para OBTENER TODOS los libros
+// GET /libros
+app.MapGet("/libros", () =>
+{
+    var libroService = new LibroService();
+    var librosDelDominio = libroService.GetAll();
+    var dtos = librosDelDominio.Select(l => new LibroDto
+    {
+        Id = l.Id,
+        Titulo = l.Titulo,
+        ISBN = l.ISBN,
+        AutorNombreCompleto = $"{l.Autor.Nombre} {l.Autor.Apellido}",
+    }).ToList();
+    return Results.Ok(dtos);
+})
+.WithName("GetAllLibros")
+.Produces<List<LibroDto>>(StatusCodes.Status200OK);
+
+// Endpoint para OBTENER UN libro por su ID
+// GET /libros/1
+app.MapGet("/libros/{id}", (int id) =>
+{
+    var libroService = new LibroService();
+    var libro = libroService.GetById(id);
+    if (libro == null)
+    {
+        return Results.NotFound();
+    }
+    var dto = new LibroDto
+    {
+        Id = libro.Id,
+        Titulo = libro.Titulo,
+        ISBN = libro.ISBN,
+        AutorNombreCompleto = $"{libro.Autor.Nombre} {libro.Autor.Apellido}",
+        GeneroNombre = libro.Genero.Nombre
+    };
+    return Results.Ok(dto);
+})
+.WithName("GetLibroById")
+.Produces<LibroDto>(StatusCodes.Status200OK)
+.Produces(StatusCodes.Status404NotFound);
+
+// Endpoint para CREAR un nuevo libro
+app.MapPost("/libros", (CrearLibroDto libroDto) =>
+{
+    try
+    {
+        var libroService = new LibroService();
+        // Capturamos el libro que nos devuelve el servicio
+        var libroCreado = libroService.Add(libroDto);
+
+        // Creamos un DTO de respuesta para el cliente
+        var dtoRespuesta = new LibroDto
+        {
+            Id = libroCreado.Id,
+            Titulo = libroCreado.Titulo,
+            ISBN = libroCreado.ISBN,
+            AutorNombreCompleto = $"{libroCreado.Autor.Nombre} {libroCreado.Autor.Apellido}",
+            GeneroNombre = libroCreado.Genero.Nombre
+        };
+
+        return Results.Created($"/libros/{dtoRespuesta.Id}", dtoRespuesta);
+    }
+    catch (ArgumentException ex)
+    {
+        return Results.BadRequest(new { error = ex.Message });
+    }
+})
+.WithName("AddLibro")
+.Produces<LibroDto>(StatusCodes.Status201Created)
+.Produces(StatusCodes.Status400BadRequest);
+
+// Endpoint para MODIFICAR un libro existente
+app.MapPut("/libros/{id}", (int id, CrearLibroDto libroDto) =>
+{
+    try
+    {
+        var libroService = new LibroService();
+        var actualizado = libroService.Update(id, libroDto);
+
+        if (!actualizado)
+        {
+            return Results.NotFound();
+        }
+
+        return Results.NoContent();
+    }
+    catch (ArgumentException ex)
+    {
+        return Results.BadRequest(new { error = ex.Message });
+    }
+})
+.WithName("UpdateLibro")
+.Produces(StatusCodes.Status204NoContent)
+.Produces(StatusCodes.Status404NotFound)
+.Produces(StatusCodes.Status400BadRequest);
+
+// Endpoint para ELIMINAR un libro
+app.MapDelete("/libros/{id}", (int id) =>
+{
+    var libroService = new LibroService();
+    var eliminado = libroService.Delete(id);
+    if (!eliminado)
+    {
+        return Results.NotFound();
+    }
+    return Results.NoContent();
+})
+.WithName("DeleteLibro")
+.Produces(StatusCodes.Status204NoContent)
+.Produces(StatusCodes.Status404NotFound);
+
+// --- FIN DE ENDPOINTS PARA LIBROS ---
+
 app.Run();

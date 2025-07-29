@@ -1,1 +1,36 @@
+# Carpetas de Visual Studio
 .vs/
+
+# Carpetas de build y compilación
+bin/
+obj/
+
+# Archivos de configuración de usuario específicos
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Archivos de NuGet
+*.nupkg
+# La carpeta packages puede omitirse debido a la restauración de paquetes
+**/[Pp]ackages/*
+# excepto build/, que se usa como destino de MSBuild.
+!**/[Pp]ackages/build/
+# Descomenta si es necesario
+#!**/[Pp]ackages/repositories.config
+# Los archivos project.json de NuGet producen más archivos ignorables
+*.nuget.props
+*.nuget.targets
+
+# Archivos de pruebas
+TestResults/
+
+# Archivos temporales
+*.tmp
+*.temp
+
+# Archivos de log
+*.log
+
+.fake

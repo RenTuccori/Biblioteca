@@ -9,6 +9,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Biblioteca.Data\Biblioteca.Data.csproj" />
     <ProjectReference Include="..\Biblioteca.Domain.Model\Biblioteca.Domain.Model.csproj" />
+    <ProjectReference Include="..\Biblioteca.DTOs\Biblioteca.DTOs.csproj" />
   </ItemGroup>
 
 </Project>
