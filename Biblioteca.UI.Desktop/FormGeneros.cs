@@ -4,11 +4,11 @@ using Biblioteca.DTOs;
 
 namespace Biblioteca.UI.Desktop
 {
-    public partial class Form1 : Form
+    public partial class FormGeneros : Form
     {
         private readonly GeneroService _generoService;
 
-        public Form1()
+        public FormGeneros()
         {
             InitializeComponent();
             _generoService = new GeneroService();

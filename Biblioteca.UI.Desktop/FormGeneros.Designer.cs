@@ -1,6 +1,6 @@
 ﻿namespace Biblioteca.UI.Desktop
 {
-    partial class Form1
+    partial class FormGeneros
     {
         private System.ComponentModel.IContainer components = null;
 
