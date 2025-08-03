@@ -8,5 +8,7 @@
         public string ISBN { get; set; }
         public string AutorNombreCompleto { get; set; }
         public string GeneroNombre { get; set; }
+        public int AutorId { get; set; }
+        public int GeneroId { get; set; }
     }
 }

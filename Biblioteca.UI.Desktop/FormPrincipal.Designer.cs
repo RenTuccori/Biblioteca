@@ -30,13 +30,15 @@
         {
             btnGestionarGeneros = new Button();
             btnGestionarAutores = new Button();
+            btnGestionarLibros = new Button();
             SuspendLayout();
             // 
             // btnGestionarGeneros
             // 
-            btnGestionarGeneros.Location = new Point(95, 47);
+            btnGestionarGeneros.Location = new Point(83, 35);
+            btnGestionarGeneros.Margin = new Padding(3, 2, 3, 2);
             btnGestionarGeneros.Name = "btnGestionarGeneros";
-            btnGestionarGeneros.Size = new Size(160, 29);
+            btnGestionarGeneros.Size = new Size(140, 22);
             btnGestionarGeneros.TabIndex = 0;
             btnGestionarGeneros.Text = "Gestionar Géneros";
             btnGestionarGeneros.UseVisualStyleBackColor = true;
@@ -44,21 +46,34 @@
             // 
             // btnGestionarAutores
             // 
-            btnGestionarAutores.Location = new Point(95, 82);
+            btnGestionarAutores.Location = new Point(83, 62);
+            btnGestionarAutores.Margin = new Padding(3, 2, 3, 2);
             btnGestionarAutores.Name = "btnGestionarAutores";
-            btnGestionarAutores.Size = new Size(160, 29);
+            btnGestionarAutores.Size = new Size(140, 22);
             btnGestionarAutores.TabIndex = 1;
             btnGestionarAutores.Text = "Gestionar Autores";
             btnGestionarAutores.UseVisualStyleBackColor = true;
             btnGestionarAutores.Click += btnGestionarAutores_Click;
             // 
+            // btnGestionarLibros
+            // 
+            btnGestionarLibros.Location = new Point(83, 89);
+            btnGestionarLibros.Name = "btnGestionarLibros";
+            btnGestionarLibros.Size = new Size(140, 23);
+            btnGestionarLibros.TabIndex = 2;
+            btnGestionarLibros.Text = "Gestionar Libros";
+            btnGestionarLibros.UseVisualStyleBackColor = true;
+            btnGestionarLibros.Click += btnGestionarLibros_Click;
+            // 
             // FormPrincipal
             // 
-            AutoScaleDimensions = new SizeF(8F, 20F);
+            AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(800, 450);
+            ClientSize = new Size(700, 338);
+            Controls.Add(btnGestionarLibros);
             Controls.Add(btnGestionarAutores);
             Controls.Add(btnGestionarGeneros);
+            Margin = new Padding(3, 2, 3, 2);
             Name = "FormPrincipal";
             Text = "FormPrincipal";
             ResumeLayout(false);
@@ -68,5 +83,6 @@
 
         private Button btnGestionarGeneros;
         private Button btnGestionarAutores;
+        private Button btnGestionarLibros;
     }
 }
