@@ -14,7 +14,7 @@ namespace Biblioteca.UI.Desktop
             _generoService = new GeneroService();
         }
 
-        private void Form1_Load(object sender, EventArgs e)
+        private void FormGenero_Load(object sender, EventArgs e)
         {
             CargarGeneros();
         }
