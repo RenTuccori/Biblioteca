@@ -14,6 +14,7 @@
     <ProjectReference Include="..\Biblioteca.Domain.Model\Biblioteca.Domain.Model.csproj" />
     <ProjectReference Include="..\Biblioteca.Domain.Services\Biblioteca.Domain.Services.csproj" />
     <ProjectReference Include="..\Biblioteca.DTOs\Biblioteca.DTOs.csproj" />
+    <ProjectReference Include="..\Biblioteca.Data\Biblioteca.Data.csproj" />
   </ItemGroup>
 
 </Project>

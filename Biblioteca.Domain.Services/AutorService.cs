@@ -1,66 +1,101 @@
 ﻿// EN: Biblioteca.Domain.Services/AutorService.cs
 
-using Biblioteca.Domain.Model;
 using Biblioteca.Data;
-using System.Linq; // Asegúrate de tener este using
+using Biblioteca.Domain.Model;
+using Biblioteca.DTOs;
 
 namespace Biblioteca.Domain.Services
 {
     public class AutorService
     {
-        public List<Autor> GetAll()
+        private readonly AutorRepository _autorRepository;
+
+        public AutorService(AutorRepository autorRepository)
         {
-            return AutorInMemory.Autores.ToList();
+            _autorRepository = autorRepository;
         }
 
-        public Autor? GetById(int id)
+        public AutorDto Add(CrearAutorDto dto)
         {
-            // Devolvemos el autor o null si no se encuentra (sin excepción).
-            return AutorInMemory.Autores.FirstOrDefault(a => a.Id == id);
-        }
+            if (dto == null)
+                throw new ArgumentNullException(nameof(dto));
 
-        public void Add(Autor autor)
-        {
-            autor.SetId(GetNextId());
-            AutorInMemory.Autores.Add(autor);
-        }
+            var autor = new Autor(0, dto.Nombre, dto.Apellido);
+            
+            _autorRepository.Add(autor);
+            _autorRepository.SaveChanges();
 
-        // --- MÉTODO UPDATE CORREGIDO (devuelve bool) ---
-        public bool Update(Autor autor)
-        {
-            Autor? autorExistente = AutorInMemory.Autores.FirstOrDefault(a => a.Id == autor.Id);
-            if (autorExistente != null)
+            return new AutorDto
             {
-                // Si lo encontramos, actualizamos y devolvemos true
-                autorExistente.SetNombre(autor.Nombre);
-                autorExistente.SetApellido(autor.Apellido);
-                return true;
-            }
-            // Si no lo encontramos, simplemente devolvemos false
-            return false;
+                Id = autor.Id,
+                Nombre = autor.Nombre,
+                Apellido = autor.Apellido
+            };
         }
 
-        // --- MÉTODO DELETE CORREGIDO (devuelve bool) ---
         public bool Delete(int id)
         {
-            Autor? autorAEliminar = AutorInMemory.Autores.FirstOrDefault(a => a.Id == id);
-            if (autorAEliminar != null)
+            try
             {
-                // Si lo encontramos, lo eliminamos y devolvemos true
-                AutorInMemory.Autores.Remove(autorAEliminar);
-                return true;
+                var result = _autorRepository.Delete(id);
+                if (result)
+                    _autorRepository.SaveChanges();
+                return result;
             }
-            // Si no lo encontramos, devolvemos false
-            return false;
+            catch (InvalidOperationException)
+            {
+                throw;
+            }
         }
 
-        private int GetNextId()
+        public AutorDto? Get(int id)
         {
-            if (AutorInMemory.Autores.Count == 0)
+            var autor = _autorRepository.Get(id);
+            if (autor == null)
+                return null;
+
+            return new AutorDto
             {
-                return 1;
-            }
-            return AutorInMemory.Autores.Max(a => a.Id) + 1;
+                Id = autor.Id,
+                Nombre = autor.Nombre,
+                Apellido = autor.Apellido
+            };
+        }
+
+        public IEnumerable<AutorDto> GetAll()
+        {
+            var autores = _autorRepository.GetAll();
+            return autores.Select(a => new AutorDto
+            {
+                Id = a.Id,
+                Nombre = a.Nombre,
+                Apellido = a.Apellido
+            });
+        }
+
+        public bool Update(AutorDto dto)
+        {
+            if (dto == null)
+                throw new ArgumentNullException(nameof(dto));
+
+            var autor = new Autor(dto.Id, dto.Nombre, dto.Apellido);
+            
+            var result = _autorRepository.Update(autor);
+            if (result)
+                _autorRepository.SaveChanges();
+            
+            return result;
+        }
+
+        public IEnumerable<AutorDto> GetByCriteria(BusquedaCriterioDto criterioDto)
+        {
+            var autores = _autorRepository.GetByCriteria(criterioDto.Texto);
+            return autores.Select(a => new AutorDto
+            {
+                Id = a.Id,
+                Nombre = a.Nombre,
+                Apellido = a.Apellido
+            });
         }
     }
 }

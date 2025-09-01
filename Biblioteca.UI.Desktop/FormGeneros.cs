@@ -1,5 +1,5 @@
+using Biblioteca.Data;
 using Biblioteca.Domain.Services;
-using Biblioteca.Domain.Model;
 using Biblioteca.DTOs;
 
 namespace Biblioteca.UI.Desktop
@@ -11,7 +11,11 @@ namespace Biblioteca.UI.Desktop
         public FormGeneros()
         {
             InitializeComponent();
-            _generoService = new GeneroService();
+            
+            // Configurar servicios con dependencias
+            var context = DatabaseHelper.CreateDbContext();
+            var generoRepository = new GeneroRepository(context);
+            _generoService = new GeneroService(generoRepository);
         }
 
         private void FormGenero_Load(object sender, EventArgs e)
@@ -36,14 +40,18 @@ namespace Biblioteca.UI.Desktop
         {
             try
             {
-                var nuevoGenero = new Genero(0, txtNombreGenero.Text);
-                _generoService.Add(nuevoGenero);
+                var nuevoGeneroDto = new CrearGeneroDto { Nombre = txtNombreGenero.Text };
+                _generoService.Add(nuevoGeneroDto);
                 MessageBox.Show("Género agregado con éxito.");
                 CargarGeneros();
             }
             catch (ArgumentException ex)
             {
                 MessageBox.Show(ex.Message, "Error de validación", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            catch (InvalidOperationException ex)
+            {
+                MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
@@ -57,14 +65,18 @@ namespace Biblioteca.UI.Desktop
 
             try
             {
-                // 1. Obtenemos el ID del género seleccionado.
+                // 1. Obtenemos el DTO del género seleccionado.
                 var generoSeleccionado = (GeneroDto)dgvGeneros.SelectedRows[0].DataBoundItem;
 
-                // 2. Creamos un nuevo objeto de dominio con el ID original y el nuevo nombre del TextBox.
-                var generoModificado = new Genero(generoSeleccionado.Id, txtNombreGenero.Text);
+                // 2. Creamos un DTO con el ID original y el nuevo nombre del TextBox.
+                var generoModificadoDto = new GeneroDto 
+                { 
+                    Id = generoSeleccionado.Id, 
+                    Nombre = txtNombreGenero.Text 
+                };
 
                 // 3. Llamamos al servicio de actualización.
-                bool resultado = _generoService.Update(generoModificado);
+                bool resultado = _generoService.Update(generoModificadoDto);
 
                 if (resultado)
                 {
@@ -80,7 +92,12 @@ namespace Biblioteca.UI.Desktop
             {
                 MessageBox.Show(ex.Message, "Error de validación", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
+            catch (InvalidOperationException ex)
+            {
+                MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
+        
         private void btnEliminar_Click(object sender, EventArgs e)
         {
             if (dgvGeneros.SelectedRows.Count == 0)
@@ -94,32 +111,34 @@ namespace Biblioteca.UI.Desktop
 
             if (confirmacion == DialogResult.Yes)
             {
-                var generoSeleccionado = (GeneroDto)dgvGeneros.SelectedRows[0].DataBoundItem;
-                bool resultado = _generoService.Delete(generoSeleccionado.Id);
+                try
+                {
+                    var generoSeleccionado = (GeneroDto)dgvGeneros.SelectedRows[0].DataBoundItem;
+                    bool resultado = _generoService.Delete(generoSeleccionado.Id);
 
-                if (resultado)
-                {
-                    MessageBox.Show("Género eliminado con éxito.");
-                    CargarGeneros();
+                    if (resultado)
+                    {
+                        MessageBox.Show("Género eliminado con éxito.");
+                        CargarGeneros();
+                    }
+                    else
+                    {
+                        MessageBox.Show("No se pudo encontrar el género para eliminar.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
                 }
-                else
+                catch (InvalidOperationException ex)
                 {
-                    MessageBox.Show("No se pudo encontrar el género para eliminar.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             }
         }
 
         private void CargarGeneros()
         {
-            List<Genero> generosDelDominio = _generoService.GetAll();
-            List<GeneroDto> generosParaMostrar = generosDelDominio.Select(g => new GeneroDto
-            {
-                Id = g.Id,
-                Nombre = g.Nombre
-            }).ToList();
+            var generosDto = _generoService.GetAll().ToList();
 
             dgvGeneros.DataSource = null;
-            dgvGeneros.DataSource = generosParaMostrar;
+            dgvGeneros.DataSource = generosDto;
 
             txtNombreGenero.Clear();
         }
@@ -127,6 +146,5 @@ namespace Biblioteca.UI.Desktop
         private void textBox1_TextChanged(object sender, EventArgs e)
         {
         }
-
     }
 }

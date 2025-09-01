@@ -1,7 +1,6 @@
-﻿using Biblioteca.Domain.Model;
+﻿using Biblioteca.Data;
 using Biblioteca.Domain.Services;
 using Biblioteca.DTOs;
-using System.Data;
 
 namespace Biblioteca.UI.Desktop
 {
@@ -14,9 +13,16 @@ namespace Biblioteca.UI.Desktop
         public FormLibros()
         {
             InitializeComponent();
-            _libroService = new LibroService();
-            _autorService = new AutorService();
-            _generoService = new GeneroService();
+            
+            // Configurar servicios con dependencias
+            var context = DatabaseHelper.CreateDbContext();
+            var libroRepository = new LibroRepository(context);
+            var autorRepository = new AutorRepository(context);
+            var generoRepository = new GeneroRepository(context);
+            
+            _libroService = new LibroService(libroRepository, autorRepository, generoRepository);
+            _autorService = new AutorService(autorRepository);
+            _generoService = new GeneroService(generoRepository);
         }
 
         private void FormLibros_Load(object sender, EventArgs e)
@@ -50,21 +56,10 @@ namespace Biblioteca.UI.Desktop
 
         private void CargarLibros()
         {
-            var librosDelDominio = _libroService.GetAll();
-            var librosParaMostrar = librosDelDominio.Select(l => new LibroDto
-            {
-                Id = l.Id,
-                Titulo = l.Titulo,
-                ISBN = l.ISBN,
-                AutorNombreCompleto = $"{l.Autor.Nombre} {l.Autor.Apellido}",
-                GeneroNombre = l.Genero.Nombre,
-                // Llenamos los IDs para usarlos en la selección
-                AutorId = l.Autor.Id,
-                GeneroId = l.Genero.Id
-            }).ToList();
+            var librosDto = _libroService.GetAll().ToList();
 
             dgvLibros.DataSource = null;
-            dgvLibros.DataSource = librosParaMostrar;
+            dgvLibros.DataSource = librosDto;
         }
 
         private void dgvLibros_SelectionChanged(object sender, EventArgs e)
@@ -86,18 +81,26 @@ namespace Biblioteca.UI.Desktop
         {
             try
             {
+                // Validar que hay valores seleccionados
+                if (cmbAutor.SelectedValue == null || cmbGenero.SelectedValue == null)
+                {
+                    MessageBox.Show("Por favor seleccione un autor y un género.", "Validación", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+
                 // Creamos el DTO para la creación a partir de los controles
                 var libroDto = new CrearLibroDto
                 {
                     Titulo = txtTitulo.Text,
                     ISBN = txtISBN.Text,
-                    AutorId = (int)cmbAutor.SelectedValue,
-                    GeneroId = (int)cmbGenero.SelectedValue
+                    AutorId = Convert.ToInt32(cmbAutor.SelectedValue),
+                    GeneroId = Convert.ToInt32(cmbGenero.SelectedValue)
                 };
 
                 _libroService.Add(libroDto);
                 MessageBox.Show("Libro agregado con éxito.");
                 CargarLibros();
+                LimpiarControles();
             }
             catch (Exception ex)
             {
@@ -115,19 +118,28 @@ namespace Biblioteca.UI.Desktop
 
             try
             {
-                var libroSeleccionado = (LibroDto)dgvLibros.SelectedRows[0].DataBoundItem;
-                var libroDto = new CrearLibroDto
+                // Validar que hay valores seleccionados
+                if (cmbAutor.SelectedValue == null || cmbGenero.SelectedValue == null)
                 {
+                    MessageBox.Show("Por favor seleccione un autor y un género.", "Validación", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+
+                var libroSeleccionado = (LibroDto)dgvLibros.SelectedRows[0].DataBoundItem;
+                var libroDto = new LibroDto
+                {
+                    Id = libroSeleccionado.Id,
                     Titulo = txtTitulo.Text,
                     ISBN = txtISBN.Text,
-                    AutorId = (int)cmbAutor.SelectedValue,
-                    GeneroId = (int)cmbGenero.SelectedValue
+                    AutorId = Convert.ToInt32(cmbAutor.SelectedValue),
+                    GeneroId = Convert.ToInt32(cmbGenero.SelectedValue)
                 };
 
-                if (_libroService.Update(libroSeleccionado.Id, libroDto))
+                if (_libroService.Update(libroDto))
                 {
                     MessageBox.Show("Libro modificado con éxito.");
                     CargarLibros();
+                    LimpiarControles();
                 }
                 else
                 {
@@ -151,17 +163,35 @@ namespace Biblioteca.UI.Desktop
             var confirmacion = MessageBox.Show("¿Está seguro?", "Confirmar eliminación", MessageBoxButtons.YesNo);
             if (confirmacion == DialogResult.Yes)
             {
-                var libroSeleccionado = (LibroDto)dgvLibros.SelectedRows[0].DataBoundItem;
-                if (_libroService.Delete(libroSeleccionado.Id))
+                try
                 {
-                    MessageBox.Show("Libro eliminado con éxito.");
-                    CargarLibros();
+                    var libroSeleccionado = (LibroDto)dgvLibros.SelectedRows[0].DataBoundItem;
+                    if (_libroService.Delete(libroSeleccionado.Id))
+                    {
+                        MessageBox.Show("Libro eliminado con éxito.");
+                        CargarLibros();
+                        LimpiarControles();
+                    }
+                    else
+                    {
+                        MessageBox.Show("No se pudo encontrar el libro.", "Error");
+                    }
                 }
-                else
+                catch (Exception ex)
                 {
-                    MessageBox.Show("No se pudo encontrar el libro.", "Error");
+                    MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             }
+        }
+
+        private void LimpiarControles()
+        {
+            txtTitulo.Clear();
+            txtISBN.Clear();
+            if (cmbAutor.Items.Count > 0)
+                cmbAutor.SelectedIndex = 0;
+            if (cmbGenero.Items.Count > 0)
+                cmbGenero.SelectedIndex = 0;
         }
 
         private void comboBox2_SelectedIndexChanged(object sender, EventArgs e)

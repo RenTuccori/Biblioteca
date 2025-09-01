@@ -11,6 +11,11 @@
   <ItemGroup>
     <ProjectReference Include="..\Biblioteca.Domain.Services\Biblioteca.Domain.Services.csproj" />
     <ProjectReference Include="..\Biblioteca.DTOs\Biblioteca.DTOs.csproj" />
+    <ProjectReference Include="..\Biblioteca.Data\Biblioteca.Data.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="9.0.8" />
   </ItemGroup>
 
 </Project>

@@ -1,7 +1,7 @@
 ﻿// EN: Biblioteca.UI.Desktop/FormAutores.cs
 
+using Biblioteca.Data;
 using Biblioteca.Domain.Services;
-using Biblioteca.Domain.Model;
 using Biblioteca.DTOs;
 
 namespace Biblioteca.UI.Desktop
@@ -13,7 +13,11 @@ namespace Biblioteca.UI.Desktop
         public FormAutores()
         {
             InitializeComponent();
-            _autorService = new AutorService(); // Usamos el servicio de Autores
+            
+            // Configurar servicios con dependencias
+            var context = DatabaseHelper.CreateDbContext();
+            var autorRepository = new AutorRepository(context);
+            _autorService = new AutorService(autorRepository);
         }
 
         private void FormAutores_Load(object sender, EventArgs e)
@@ -35,14 +39,22 @@ namespace Biblioteca.UI.Desktop
         {
             try
             {
-                var nuevoAutor = new Autor(0, txtNombreAutor.Text, txtApellidoAutor.Text);
-                _autorService.Add(nuevoAutor);
+                var nuevoAutorDto = new CrearAutorDto 
+                { 
+                    Nombre = txtNombreAutor.Text, 
+                    Apellido = txtApellidoAutor.Text 
+                };
+                _autorService.Add(nuevoAutorDto);
                 MessageBox.Show("Autor agregado con éxito.");
                 CargarAutores();
             }
             catch (ArgumentException ex)
             {
                 MessageBox.Show(ex.Message, "Error de validación", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            catch (InvalidOperationException ex)
+            {
+                MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
@@ -56,8 +68,14 @@ namespace Biblioteca.UI.Desktop
             try
             {
                 var autorSeleccionado = (AutorDto)dgvAutores.SelectedRows[0].DataBoundItem;
-                var autorModificado = new Autor(autorSeleccionado.Id, txtNombreAutor.Text, txtApellidoAutor.Text);
-                if (_autorService.Update(autorModificado))
+                var autorModificadoDto = new AutorDto 
+                { 
+                    Id = autorSeleccionado.Id, 
+                    Nombre = txtNombreAutor.Text, 
+                    Apellido = txtApellidoAutor.Text 
+                };
+                
+                if (_autorService.Update(autorModificadoDto))
                 {
                     MessageBox.Show("Autor modificado con éxito.");
                     CargarAutores();
@@ -71,6 +89,10 @@ namespace Biblioteca.UI.Desktop
             {
                 MessageBox.Show(ex.Message, "Error de validación", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
+            catch (InvalidOperationException ex)
+            {
+                MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
 
         private void btnEliminar_Click(object sender, EventArgs e)
@@ -80,34 +102,36 @@ namespace Biblioteca.UI.Desktop
                 MessageBox.Show("Por favor, seleccione un autor para eliminar.", "Atención", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
+            
             var confirmacion = MessageBox.Show("¿Está seguro de que desea eliminar este autor?", "Confirmar eliminación", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
             if (confirmacion == DialogResult.Yes)
             {
-                var autorSeleccionado = (AutorDto)dgvAutores.SelectedRows[0].DataBoundItem;
-                if (_autorService.Delete(autorSeleccionado.Id))
+                try
                 {
-                    MessageBox.Show("Autor eliminado con éxito.");
-                    CargarAutores();
+                    var autorSeleccionado = (AutorDto)dgvAutores.SelectedRows[0].DataBoundItem;
+                    if (_autorService.Delete(autorSeleccionado.Id))
+                    {
+                        MessageBox.Show("Autor eliminado con éxito.");
+                        CargarAutores();
+                    }
+                    else
+                    {
+                        MessageBox.Show("No se pudo encontrar el autor para eliminar.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
                 }
-                else
+                catch (InvalidOperationException ex)
                 {
-                    MessageBox.Show("No se pudo encontrar el autor para eliminar.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             }
         }
 
         private void CargarAutores()
         {
-            List<Autor> autoresDelDominio = _autorService.GetAll();
-            List<AutorDto> autoresParaMostrar = autoresDelDominio.Select(a => new AutorDto
-            {
-                Id = a.Id,
-                Nombre = a.Nombre,
-                Apellido = a.Apellido
-            }).ToList();
+            var autoresDto = _autorService.GetAll().ToList();
 
             dgvAutores.DataSource = null;
-            dgvAutores.DataSource = autoresParaMostrar;
+            dgvAutores.DataSource = autoresDto;
 
             txtNombreAutor.Clear();
             txtApellidoAutor.Clear();

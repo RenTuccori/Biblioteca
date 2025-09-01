@@ -1,68 +1,95 @@
 ﻿using Biblioteca.Data;
 using Biblioteca.Domain.Model;
-using System.Linq;
+using Biblioteca.DTOs;
 
 namespace Biblioteca.Domain.Services
 {
     public class GeneroService
     {
-        // Método para obtener la lista completa de géneros.
-        public List<Genero> GetAll()
+        private readonly GeneroRepository _generoRepository;
+
+        public GeneroService(GeneroRepository generoRepository)
         {
-            return GeneroInMemory.Generos.ToList();
+            _generoRepository = generoRepository;
         }
 
-        // Método para obtener un género por su ID.
-        
-        public Genero GetById(int id)
+        public GeneroDto Add(CrearGeneroDto dto)
         {
-            return GeneroInMemory.Generos.FirstOrDefault(g => g.Id == id) 
-                   ?? throw new KeyNotFoundException($"Género con ID {id} no encontrado.");
-        }
+            if (dto == null)
+                throw new ArgumentNullException(nameof(dto));
 
-        // Método para agregar un nuevo género.
-        public void Add(Genero genero)
-        {
-            genero.SetId(GetNextId());
-            GeneroInMemory.Generos.Add(genero);
-        }
+            var genero = new Genero(0, dto.Nombre);
+            
+            _generoRepository.Add(genero);
+            _generoRepository.SaveChanges();
 
-        // Función auxiliar para generar el próximo ID.
-        private int GetNextId()
-        {
-            if (GeneroInMemory.Generos.Count == 0)
+            return new GeneroDto
             {
-                return 1;
-            }
-            return GeneroInMemory.Generos.Max(g => g.Id) + 1;
+                Id = genero.Id,
+                Nombre = genero.Nombre
+            };
         }
 
-        // Metodo para actualizar un género existente.
-        public bool Update(Genero generoAActualizar)
-        {
-            Genero? generoExistente = GeneroInMemory.Generos.FirstOrDefault(g => g.Id == generoAActualizar.Id);
-
-            if (generoExistente != null)
-            {
-                generoExistente.SetNombre(generoAActualizar.Nombre);
-                return true;
-            }
-
-            return false;
-        }
-
-        // Metodo para eliminar un género por ID.
         public bool Delete(int id)
         {
-            Genero? generoAEliminar = GeneroInMemory.Generos.FirstOrDefault(g => g.Id == id);
-
-            if (generoAEliminar != null)
+            try
             {
-                GeneroInMemory.Generos.Remove(generoAEliminar);
-                return true;
+                var result = _generoRepository.Delete(id);
+                if (result)
+                    _generoRepository.SaveChanges();
+                return result;
             }
+            catch (InvalidOperationException)
+            {
+                throw;
+            }
+        }
 
-            return false;
+        public GeneroDto? Get(int id)
+        {
+            var genero = _generoRepository.Get(id);
+            if (genero == null)
+                return null;
+
+            return new GeneroDto
+            {
+                Id = genero.Id,
+                Nombre = genero.Nombre
+            };
+        }
+
+        public IEnumerable<GeneroDto> GetAll()
+        {
+            var generos = _generoRepository.GetAll();
+            return generos.Select(g => new GeneroDto
+            {
+                Id = g.Id,
+                Nombre = g.Nombre
+            });
+        }
+
+        public bool Update(GeneroDto dto)
+        {
+            if (dto == null)
+                throw new ArgumentNullException(nameof(dto));
+
+            var genero = new Genero(dto.Id, dto.Nombre);
+            
+            var result = _generoRepository.Update(genero);
+            if (result)
+                _generoRepository.SaveChanges();
+            
+            return result;
+        }
+
+        public IEnumerable<GeneroDto> GetByCriteria(BusquedaCriterioDto criterioDto)
+        {
+            var generos = _generoRepository.GetByCriteria(criterioDto.Texto);
+            return generos.Select(g => new GeneroDto
+            {
+                Id = g.Id,
+                Nombre = g.Nombre
+            });
         }
     }
 }

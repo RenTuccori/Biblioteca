@@ -1,78 +1,160 @@
 ﻿using Biblioteca.Data;
 using Biblioteca.Domain.Model;
 using Biblioteca.DTOs;
-using System.Linq;
 
 namespace Biblioteca.Domain.Services
 {
     public class LibroService
     {
-        // Dependencias de otros servicios
-        private readonly AutorService _autorService;
-        private readonly GeneroService _generoService;
+        private readonly LibroRepository _libroRepository;
+        private readonly AutorRepository _autorRepository;
+        private readonly GeneroRepository _generoRepository;
 
-        public LibroService()
+        public LibroService(LibroRepository libroRepository, AutorRepository autorRepository, GeneroRepository generoRepository)
         {
-            _autorService = new AutorService();
-            _generoService = new GeneroService();
+            _libroRepository = libroRepository;
+            _autorRepository = autorRepository;
+            _generoRepository = generoRepository;
         }
 
-        public List<Libro> GetAll()
+        public LibroDto Add(CrearLibroDto dto)
         {
-            return LibroInMemory.Libros.ToList();
-        }
+            if (dto == null)
+                throw new ArgumentNullException(nameof(dto));
 
-        public Libro? GetById(int id)
-        {
-            return LibroInMemory.Libros.FirstOrDefault(l => l.Id == id);
-        }
+            // Verificar que el autor y género existan
+            var autor = _autorRepository.Get(dto.AutorId);
+            if (autor == null)
+                throw new ArgumentException($"No existe un autor con Id {dto.AutorId}");
 
-        public Libro Add(CrearLibroDto dto)
-        {
-            var autor = _autorService.GetById(dto.AutorId);
-            var genero = _generoService.GetById(dto.GeneroId);
-            var nuevoLibro = new Libro(0, dto.Titulo, dto.ISBN, autor, genero);
-            nuevoLibro.SetId(GetNextId());
-            LibroInMemory.Libros.Add(nuevoLibro);
-            return nuevoLibro;
-        }
+            var genero = _generoRepository.Get(dto.GeneroId);
+            if (genero == null)
+                throw new ArgumentException($"No existe un género con Id {dto.GeneroId}");
 
-        public bool Update(int id, CrearLibroDto dto)
-        {
-            var libroExistente = GetById(id);
-            if (libroExistente == null)
+            var libro = new Libro(0, dto.Titulo, dto.ISBN, dto.AutorId, dto.GeneroId);
+            
+            _libroRepository.Add(libro);
+            _libroRepository.SaveChanges();
+
+            return new LibroDto
             {
-                return false; // No se encontró el libro
-            }
-
-            // Buscamos el nuevo autor y género
-            var nuevoAutor = _autorService.GetById(dto.AutorId);
-            var nuevoGenero = _generoService.GetById(dto.GeneroId);
-
-            // Actualizamos el libro existente
-            libroExistente.SetTitulo(dto.Titulo);
-            libroExistente.SetISBN(dto.ISBN);
-            libroExistente.SetAutor(nuevoAutor);
-            libroExistente.SetGenero(nuevoGenero);
-
-            return true;
+                Id = libro.Id,
+                Titulo = libro.Titulo,
+                ISBN = libro.ISBN,
+                AutorId = libro.AutorId,
+                GeneroId = libro.GeneroId,
+                AutorNombreCompleto = $"{autor.Nombre} {autor.Apellido}",
+                GeneroNombre = genero.Nombre
+            };
         }
 
         public bool Delete(int id)
         {
-            var libroAEliminar = GetById(id);
-            if (libroAEliminar == null)
-            {
-                return false;
-            }
-
-            LibroInMemory.Libros.Remove(libroAEliminar);
-            return true;
+            var result = _libroRepository.Delete(id);
+            if (result)
+                _libroRepository.SaveChanges();
+            return result;
         }
-        private int GetNextId()
+
+        public LibroDto? Get(int id)
         {
-            if (LibroInMemory.Libros.Count == 0) return 1;
-            return LibroInMemory.Libros.Max(l => l.Id) + 1;
+            var libro = _libroRepository.Get(id);
+            if (libro == null)
+                return null;
+
+            return new LibroDto
+            {
+                Id = libro.Id,
+                Titulo = libro.Titulo,
+                ISBN = libro.ISBN,
+                AutorId = libro.AutorId,
+                GeneroId = libro.GeneroId,
+                AutorNombreCompleto = libro.Autor != null ? $"{libro.Autor.Nombre} {libro.Autor.Apellido}" : "",
+                GeneroNombre = libro.Genero?.Nombre ?? ""
+            };
+        }
+
+        public IEnumerable<LibroDto> GetAll()
+        {
+            var libros = _libroRepository.GetAll();
+            return libros.Select(l => new LibroDto
+            {
+                Id = l.Id,
+                Titulo = l.Titulo,
+                ISBN = l.ISBN,
+                AutorId = l.AutorId,
+                GeneroId = l.GeneroId,
+                AutorNombreCompleto = l.Autor != null ? $"{l.Autor.Nombre} {l.Autor.Apellido}" : "",
+                GeneroNombre = l.Genero?.Nombre ?? ""
+            });
+        }
+
+        public bool Update(LibroDto dto)
+        {
+            if (dto == null)
+                throw new ArgumentNullException(nameof(dto));
+
+            // Verificar que el autor y género existan
+            var autor = _autorRepository.Get(dto.AutorId);
+            if (autor == null)
+                throw new ArgumentException($"No existe un autor con Id {dto.AutorId}");
+
+            var genero = _generoRepository.Get(dto.GeneroId);
+            if (genero == null)
+                throw new ArgumentException($"No existe un género con Id {dto.GeneroId}");
+
+            var libro = new Libro(dto.Id, dto.Titulo, dto.ISBN, dto.AutorId, dto.GeneroId);
+            
+            var result = _libroRepository.Update(libro);
+            if (result)
+                _libroRepository.SaveChanges();
+            
+            return result;
+        }
+
+        public IEnumerable<LibroDto> GetByCriteria(BusquedaCriterioDto criterioDto)
+        {
+            var libros = _libroRepository.GetByCriteria(criterioDto.Texto);
+            return libros.Select(l => new LibroDto
+            {
+                Id = l.Id,
+                Titulo = l.Titulo,
+                ISBN = l.ISBN,
+                AutorId = l.AutorId,
+                GeneroId = l.GeneroId,
+                AutorNombreCompleto = l.Autor != null ? $"{l.Autor.Nombre} {l.Autor.Apellido}" : "",
+                GeneroNombre = l.Genero?.Nombre ?? ""
+            });
+        }
+
+        public IEnumerable<LibroDto> GetByAutor(int autorId)
+        {
+            var libros = _libroRepository.GetByAutor(autorId);
+            return libros.Select(l => new LibroDto
+            {
+                Id = l.Id,
+                Titulo = l.Titulo,
+                ISBN = l.ISBN,
+                AutorId = l.AutorId,
+                GeneroId = l.GeneroId,
+                AutorNombreCompleto = l.Autor != null ? $"{l.Autor.Nombre} {l.Autor.Apellido}" : "",
+                GeneroNombre = l.Genero?.Nombre ?? ""
+            });
+        }
+
+        public IEnumerable<LibroDto> GetByGenero(int generoId)
+        {
+            var libros = _libroRepository.GetByGenero(generoId);
+            return libros.Select(l => new LibroDto
+            {
+                Id = l.Id,
+                Titulo = l.Titulo,
+                ISBN = l.ISBN,
+                AutorId = l.AutorId,
+                GeneroId = l.GeneroId,
+                AutorNombreCompleto = l.Autor != null ? $"{l.Autor.Nombre} {l.Autor.Apellido}" : "",
+                GeneroNombre = l.Genero?.Nombre ?? ""
+            });
         }
     }
 }

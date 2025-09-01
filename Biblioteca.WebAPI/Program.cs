@@ -1,387 +1,274 @@
-using Biblioteca.Domain.Model;
+using Biblioteca.Data;
 using Biblioteca.Domain.Services;
-using Biblioteca.DTOs;
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Configuración de servicios (igual que en el ejemplo)
+// Add services to the container.
+builder.Services.AddRazorPages();
+
+// Configurar Entity Framework con SQLite usando configuración centralizada
+builder.Services.AddDbContext<BibliotecaContext>(options =>
+    options.UseSqlite(DatabaseConfiguration.ConnectionString));
+
+// Registrar repositorios
+builder.Services.AddScoped<AutorRepository>();
+builder.Services.AddScoped<GeneroRepository>();
+builder.Services.AddScoped<LibroRepository>();
+
+// Registrar servicios
+builder.Services.AddScoped<AutorService>();
+builder.Services.AddScoped<GeneroService>();
+builder.Services.AddScoped<LibroService>();
+
+// Configurar Swagger
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(c =>
+{
+    c.SwaggerDoc("v1", new() { Title = "Biblioteca API", Version = "v1" });
+});
+
+// Configurar CORS
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAll",
+        policy =>
+        {
+            policy.AllowAnyOrigin()
+                  .AllowAnyHeader()
+                  .AllowAnyMethod();
+        });
+});
 
 var app = builder.Build();
 
-// Configuración del pipeline de HTTP (igual que en el ejemplo)
+// Crear la base de datos si no existe usando configuración centralizada
+using (var scope = app.Services.CreateScope())
+{
+    var context = scope.ServiceProvider.GetRequiredService<BibliotecaContext>();
+    context.Database.EnsureCreated();
+}
+
+// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+else
+{
+    app.UseExceptionHandler("/Error");
+    app.UseHsts();
+}
 
 app.UseHttpsRedirection();
+app.UseStaticFiles();
+app.UseCors("AllowAll");
+app.UseRouting();
+app.UseAuthorization();
 
-// --- INICIO DE NUESTROS ENDPOINTS PARA GÉNEROS ---
+// API Endpoints
+app.MapRazorPages();
 
-// Endpoint para OBTENER TODOS los géneros
-// GET /generos
-app.MapGet("/generos", () =>
+// Endpoints para Géneros
+app.MapGet("/api/generos", (GeneroService service) =>
 {
-    var generoService = new GeneroService();
-    var generosDelDominio = generoService.GetAll();
-
-    // Mapeamos de la lista de Dominio a la lista de DTOs (igual que en el Form)
-    var dtos = generosDelDominio.Select(g => new GeneroDto
-    {
-        Id = g.Id,
-        Nombre = g.Nombre
-    }).ToList();
-
-    return Results.Ok(dtos);
+    return Results.Ok(service.GetAll());
 })
-.WithName("GetAllGeneros")
-.Produces<List<GeneroDto>>(StatusCodes.Status200OK);
+.WithTags("Géneros");
 
-// Endpoint para OBTENER UN género por su ID
-// GET /generos/5
-app.MapGet("/generos/{id}", (int id) =>
+app.MapGet("/api/generos/{id}", (int id, GeneroService service) =>
 {
-    var generoService = new GeneroService();
-    var genero = generoService.GetById(id);
-
-    if (genero == null)
-    {
-        return Results.NotFound(); // Si no lo encuentra, devuelve un error 404
-    }
-
-    // Mapeamos del objeto de Dominio al DTO
-    var dto = new GeneroDto { Id = genero.Id, Nombre = genero.Nombre };
-
-    return Results.Ok(dto);
+    var genero = service.Get(id);
+    return genero != null ? Results.Ok(genero) : Results.NotFound();
 })
-.WithName("GetGeneroById")
-.Produces<GeneroDto>(StatusCodes.Status200OK)
-.Produces(StatusCodes.Status404NotFound);
+.WithTags("Géneros");
 
-// Endpoint para CREAR un nuevo género
-// POST /generos
-app.MapPost("/generos", (GeneroDto generoDto) =>
+app.MapPost("/api/generos", (Biblioteca.DTOs.CrearGeneroDto dto, GeneroService service) =>
 {
     try
     {
-        var generoService = new GeneroService();
-
-        // Mapeamos del DTO que llega al objeto de Dominio para aplicar las reglas
-        var nuevoGenero = new Genero(0, generoDto.Nombre);
-
-        generoService.Add(nuevoGenero);
-
-        // Devolvemos el objeto creado (con su nuevo ID) como un DTO
-        var dtoResultado = new GeneroDto { Id = nuevoGenero.Id, Nombre = nuevoGenero.Nombre };
-
-        return Results.Created($"/generos/{dtoResultado.Id}", dtoResultado); // Devuelve un código 201 Created
+        var genero = service.Add(dto);
+        return Results.Created($"/api/generos/{genero.Id}", genero);
     }
-    catch (ArgumentException ex)
+    catch (Exception ex)
     {
-        // Si la validación del dominio falla, devolvemos un error 400
-        return Results.BadRequest(new { error = ex.Message });
+        return Results.BadRequest(ex.Message);
     }
 })
-.WithName("AddGenero")
-.Produces<GeneroDto>(StatusCodes.Status201Created)
-.Produces(StatusCodes.Status400BadRequest);
+.WithTags("Géneros");
 
-// Endpoint para MODIFICAR un género existente
-// PUT /generos/5
-app.MapPut("/generos/{id}", (int id, GeneroDto generoDto) =>
+app.MapPut("/api/generos", (Biblioteca.DTOs.GeneroDto dto, GeneroService service) =>
 {
     try
     {
-        // Es una buena práctica verificar que el ID de la URL coincida con el del cuerpo
-        if (id != generoDto.Id)
-        {
-            return Results.BadRequest("El ID de la URL no coincide con el ID del cuerpo.");
-        }
-
-        var generoService = new GeneroService();
-        var generoModificado = new Genero(generoDto.Id, generoDto.Nombre);
-
-        var encontrado = generoService.Update(generoModificado);
-
-        if (!encontrado)
-        {
-            return Results.NotFound();
-        }
-
-        return Results.NoContent(); // Devuelve un código 204 NoContent si fue exitoso
+        var success = service.Update(dto);
+        return success ? Results.Ok() : Results.NotFound();
     }
-    catch (ArgumentException ex)
+    catch (Exception ex)
     {
-        return Results.BadRequest(new { error = ex.Message });
+        return Results.BadRequest(ex.Message);
     }
 })
-.WithName("UpdateGenero")
-.Produces(StatusCodes.Status204NoContent)
-.Produces(StatusCodes.Status404NotFound)
-.Produces(StatusCodes.Status400BadRequest);
+.WithTags("Géneros");
 
-
-// Endpoint para ELIMINAR un género
-// DELETE /generos/5
-app.MapDelete("/generos/{id}", (int id) =>
-{
-    var generoService = new GeneroService();
-    var eliminado = generoService.Delete(id);
-
-    if (!eliminado)
-    {
-        return Results.NotFound();
-    }
-
-    return Results.NoContent(); // Devuelve un código 204 NoContent
-})
-.WithName("DeleteGenero")
-.Produces(StatusCodes.Status204NoContent)
-.Produces(StatusCodes.Status404NotFound);
-
-
-// --- FIN DE NUESTROS ENDPOINTS ---
-
-// --- INICIO DE ENDPOINTS PARA AUTORES ---
-
-// Endpoint para OBTENER TODOS los autores
-// GET /autores
-app.MapGet("/autores", () =>
-{
-    var autorService = new AutorService();
-    var autoresDelDominio = autorService.GetAll();
-    var dtos = autoresDelDominio.Select(a => new AutorDto
-    {
-        Id = a.Id,
-        Nombre = a.Nombre,
-        Apellido = a.Apellido
-    }).ToList();
-    return Results.Ok(dtos);
-})
-.WithName("GetAllAutores")
-.Produces<List<AutorDto>>(StatusCodes.Status200OK);
-
-// Endpoint para OBTENER UN autor por su ID
-// GET /autores/1
-app.MapGet("/autores/{id}", (int id) =>
-{
-    var autorService = new AutorService();
-    var autor = autorService.GetById(id);
-    if (autor == null)
-    {
-        return Results.NotFound();
-    }
-    var dto = new AutorDto
-    {
-        Id = autor.Id,
-        Nombre = autor.Nombre,
-        Apellido = autor.Apellido
-    };
-    return Results.Ok(dto);
-})
-.WithName("GetAutorById")
-.Produces<AutorDto>(StatusCodes.Status200OK)
-.Produces(StatusCodes.Status404NotFound);
-
-// Endpoint para CREAR un nuevo autor
-// POST /autores
-app.MapPost("/autores", (AutorDto autorDto) =>
+app.MapDelete("/api/generos/{id}", (int id, GeneroService service) =>
 {
     try
     {
-        var autorService = new AutorService();
-        var nuevoAutor = new Autor(0, autorDto.Nombre, autorDto.Apellido);
-        autorService.Add(nuevoAutor);
-        var dtoResultado = new AutorDto
-        {
-            Id = nuevoAutor.Id,
-            Nombre = nuevoAutor.Nombre,
-            Apellido = nuevoAutor.Apellido
-        };
-        return Results.Created($"/autores/{dtoResultado.Id}", dtoResultado);
+        var success = service.Delete(id);
+        return success ? Results.Ok() : Results.NotFound();
     }
-    catch (ArgumentException ex)
+    catch (Exception ex)
     {
-        return Results.BadRequest(new { error = ex.Message });
+        return Results.BadRequest(ex.Message);
     }
 })
-.WithName("AddAutor")
-.Produces<AutorDto>(StatusCodes.Status201Created)
-.Produces(StatusCodes.Status400BadRequest);
+.WithTags("Géneros");
 
-// Endpoint para MODIFICAR un autor existente
-// PUT /autores/1
-app.MapPut("/autores/{id}", (int id, AutorDto autorDto) =>
+app.MapGet("/api/generos/criteria", (string? texto, GeneroService service) =>
+{
+    var criterio = new Biblioteca.DTOs.BusquedaCriterioDto { Texto = texto ?? "" };
+    return Results.Ok(service.GetByCriteria(criterio));
+})
+.WithTags("Géneros");
+
+// Endpoints para Autores
+app.MapGet("/api/autores", (AutorService service) =>
+{
+    return Results.Ok(service.GetAll());
+})
+.WithTags("Autores");
+
+app.MapGet("/api/autores/{id}", (int id, AutorService service) =>
+{
+    var autor = service.Get(id);
+    return autor != null ? Results.Ok(autor) : Results.NotFound();
+})
+.WithTags("Autores");
+
+app.MapPost("/api/autores", (Biblioteca.DTOs.CrearAutorDto dto, AutorService service) =>
 {
     try
     {
-        if (id != autorDto.Id)
-        {
-            return Results.BadRequest("El ID de la URL no coincide con el ID del cuerpo.");
-        }
-
-        var autorService = new AutorService();
-        var autorModificado = new Autor(autorDto.Id, autorDto.Nombre, autorDto.Apellido);
-
-        // -- CÓDIGO ORIGINAL RESTAURADO --
-        var encontrado = autorService.Update(autorModificado);
-
-        if (!encontrado)
-        {
-            return Results.NotFound();
-        }
-
-        return Results.NoContent();
+        var autor = service.Add(dto);
+        return Results.Created($"/api/autores/{autor.Id}", autor);
     }
-    catch (ArgumentException ex)
+    catch (Exception ex)
     {
-        return Results.BadRequest(new { error = ex.Message });
+        return Results.BadRequest(ex.Message);
     }
 })
-.WithName("UpdateAutor")
-.Produces(StatusCodes.Status204NoContent)
-.Produces(StatusCodes.Status404NotFound)
-.Produces(StatusCodes.Status400BadRequest);
+.WithTags("Autores");
 
-// Endpoint para ELIMINAR un autor
-// DELETE /autores/1
-app.MapDelete("/autores/{id}", (int id) =>
-{
-    var autorService = new AutorService();
-
-    // -- CÓDIGO ORIGINAL RESTAURADO --
-    var eliminado = autorService.Delete(id);
-
-    if (!eliminado)
-    {
-        return Results.NotFound();
-    }
-
-    return Results.NoContent();
-})
-.WithName("DeleteAutor")
-.Produces(StatusCodes.Status204NoContent)
-.Produces(StatusCodes.Status404NotFound);
-
-// --- FIN DE ENDPOINTS PARA AUTORES ---
-
-// --- INICIO DE ENDPOINTS PARA LIBROS ---
-
-// Endpoint para OBTENER TODOS los libros
-// GET /libros
-app.MapGet("/libros", () =>
-{
-    var libroService = new LibroService();
-    var librosDelDominio = libroService.GetAll();
-    var dtos = librosDelDominio.Select(l => new LibroDto
-    {
-        Id = l.Id,
-        Titulo = l.Titulo,
-        ISBN = l.ISBN,
-        AutorNombreCompleto = $"{l.Autor.Nombre} {l.Autor.Apellido}",
-    }).ToList();
-    return Results.Ok(dtos);
-})
-.WithName("GetAllLibros")
-.Produces<List<LibroDto>>(StatusCodes.Status200OK);
-
-// Endpoint para OBTENER UN libro por su ID
-// GET /libros/1
-app.MapGet("/libros/{id}", (int id) =>
-{
-    var libroService = new LibroService();
-    var libro = libroService.GetById(id);
-    if (libro == null)
-    {
-        return Results.NotFound();
-    }
-    var dto = new LibroDto
-    {
-        Id = libro.Id,
-        Titulo = libro.Titulo,
-        ISBN = libro.ISBN,
-        AutorNombreCompleto = $"{libro.Autor.Nombre} {libro.Autor.Apellido}",
-        GeneroNombre = libro.Genero.Nombre
-    };
-    return Results.Ok(dto);
-})
-.WithName("GetLibroById")
-.Produces<LibroDto>(StatusCodes.Status200OK)
-.Produces(StatusCodes.Status404NotFound);
-
-// Endpoint para CREAR un nuevo libro
-app.MapPost("/libros", (CrearLibroDto libroDto) =>
+app.MapPut("/api/autores", (Biblioteca.DTOs.AutorDto dto, AutorService service) =>
 {
     try
     {
-        var libroService = new LibroService();
-        // Capturamos el libro que nos devuelve el servicio
-        var libroCreado = libroService.Add(libroDto);
-
-        // Creamos un DTO de respuesta para el cliente
-        var dtoRespuesta = new LibroDto
-        {
-            Id = libroCreado.Id,
-            Titulo = libroCreado.Titulo,
-            ISBN = libroCreado.ISBN,
-            AutorNombreCompleto = $"{libroCreado.Autor.Nombre} {libroCreado.Autor.Apellido}",
-            GeneroNombre = libroCreado.Genero.Nombre
-        };
-
-        return Results.Created($"/libros/{dtoRespuesta.Id}", dtoRespuesta);
+        var success = service.Update(dto);
+        return success ? Results.Ok() : Results.NotFound();
     }
-    catch (ArgumentException ex)
+    catch (Exception ex)
     {
-        return Results.BadRequest(new { error = ex.Message });
+        return Results.BadRequest(ex.Message);
     }
 })
-.WithName("AddLibro")
-.Produces<LibroDto>(StatusCodes.Status201Created)
-.Produces(StatusCodes.Status400BadRequest);
+.WithTags("Autores");
 
-// Endpoint para MODIFICAR un libro existente
-app.MapPut("/libros/{id}", (int id, CrearLibroDto libroDto) =>
+app.MapDelete("/api/autores/{id}", (int id, AutorService service) =>
 {
     try
     {
-        var libroService = new LibroService();
-        var actualizado = libroService.Update(id, libroDto);
-
-        if (!actualizado)
-        {
-            return Results.NotFound();
-        }
-
-        return Results.NoContent();
+        var success = service.Delete(id);
+        return success ? Results.Ok() : Results.NotFound();
     }
-    catch (ArgumentException ex)
+    catch (Exception ex)
     {
-        return Results.BadRequest(new { error = ex.Message });
+        return Results.BadRequest(ex.Message);
     }
 })
-.WithName("UpdateLibro")
-.Produces(StatusCodes.Status204NoContent)
-.Produces(StatusCodes.Status404NotFound)
-.Produces(StatusCodes.Status400BadRequest);
+.WithTags("Autores");
 
-// Endpoint para ELIMINAR un libro
-app.MapDelete("/libros/{id}", (int id) =>
+app.MapGet("/api/autores/criteria", (string? texto, AutorService service) =>
 {
-    var libroService = new LibroService();
-    var eliminado = libroService.Delete(id);
-    if (!eliminado)
-    {
-        return Results.NotFound();
-    }
-    return Results.NoContent();
+    var criterio = new Biblioteca.DTOs.BusquedaCriterioDto { Texto = texto ?? "" };
+    return Results.Ok(service.GetByCriteria(criterio));
 })
-.WithName("DeleteLibro")
-.Produces(StatusCodes.Status204NoContent)
-.Produces(StatusCodes.Status404NotFound);
+.WithTags("Autores");
 
-// --- FIN DE ENDPOINTS PARA LIBROS ---
+// Endpoints para Libros
+app.MapGet("/api/libros", (LibroService service) =>
+{
+    return Results.Ok(service.GetAll());
+})
+.WithTags("Libros");
 
-app.Run();
+app.MapGet("/api/libros/{id}", (int id, LibroService service) =>
+{
+    var libro = service.Get(id);
+    return libro != null ? Results.Ok(libro) : Results.NotFound();
+})
+.WithTags("Libros");
+
+app.MapPost("/api/libros", (Biblioteca.DTOs.CrearLibroDto dto, LibroService service) =>
+{
+    try
+    {
+        var libro = service.Add(dto);
+        return Results.Created($"/api/libros/{libro.Id}", libro);
+    }
+    catch (Exception ex)
+    {
+        return Results.BadRequest(ex.Message);
+    }
+})
+.WithTags("Libros");
+
+app.MapPut("/api/libros", (Biblioteca.DTOs.LibroDto dto, LibroService service) =>
+{
+    try
+    {
+        var success = service.Update(dto);
+        return success ? Results.Ok() : Results.NotFound();
+    }
+    catch (Exception ex)
+    {
+        return Results.BadRequest(ex.Message);
+    }
+})
+.WithTags("Libros");
+
+app.MapDelete("/api/libros/{id}", (int id, LibroService service) =>
+{
+    try
+    {
+        var success = service.Delete(id);
+        return success ? Results.Ok() : Results.NotFound();
+    }
+    catch (Exception ex)
+    {
+        return Results.BadRequest(ex.Message);
+    }
+})
+.WithTags("Libros");
+
+app.MapGet("/api/libros/criteria", (string? texto, LibroService service) =>
+{
+    var criterio = new Biblioteca.DTOs.BusquedaCriterioDto { Texto = texto ?? "" };
+    return Results.Ok(service.GetByCriteria(criterio));
+})
+.WithTags("Libros");
+
+app.MapGet("/api/libros/autor/{autorId}", (int autorId, LibroService service) =>
+{
+    return Results.Ok(service.GetByAutor(autorId));
+})
+.WithTags("Libros");
+
+app.MapGet("/api/libros/genero/{generoId}", (int generoId, LibroService service) =>
+{
+    return Results.Ok(service.GetByGenero(generoId));
+})
+.WithTags("Libros");
+
+app.Run();app.Run();
