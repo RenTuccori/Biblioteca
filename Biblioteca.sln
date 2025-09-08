@@ -13,11 +13,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Biblioteca.DTOs", "Bibliote
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Biblioteca.UI.Desktop", "Biblioteca.UI.Desktop\Biblioteca.UI.Desktop.csproj", "{5E163878-62BB-4FE3-A119-0771E824A4CC}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Elementos de la solución", "Elementos de la solución", "{D107F4C8-89CC-BEA8-D3D7-CA6B7733353D}"
-	ProjectSection(SolutionItems) = preProject
-		TextFile1.txt = TextFile1.txt
-	EndProjectSection
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Biblioteca.WebAPI", "Biblioteca.WebAPI\Biblioteca.WebAPI.csproj", "{FCEB0697-3E08-4F97-930E-14A41D71E051}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Biblioteca.API.Clients", "Biblioteca.API.Clients\Biblioteca.API.Clients.csproj", "{3FAD239E-59BA-4BB7-A534-E454F58DAA85}"

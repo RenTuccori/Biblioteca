@@ -62,7 +62,6 @@
                                             <th>ID</th>
                                             <th>Nombre</th>
                                             <th>Apellido</th>
-                                            <th>Biografía</th>
                                             <th class="text-center">Acciones</th>
                                         </tr>
                                     </thead>
@@ -71,9 +70,8 @@
                                         {
                                             <tr>
                                                 <td>@autor.Id</td>
-                                                <td>@autor.Nombre</td>
-                                                <td>@autor.Apellido</td>
-                                                <td>@(autor.Biografia?.Length > 100 ? autor.Biografia.Substring(0, 100) + "..." : autor.Biografia)</td>
+                                                <td>@(autor.Nombre ?? string.Empty)</td>
+                                                <td>@(autor.Apellido ?? string.Empty)</td>
                                                 <td class="text-center">
                                                     <button class="btn btn-sm btn-outline-primary me-1" @onclick="() => AbrirModalEditar(autor)">
                                                         <i class="fas fa-edit"></i>
@@ -151,12 +149,6 @@
                             <label class="form-label">Apellido *</label>
                             <InputText class="form-control" @bind-Value="autorActual.Apellido" />
                             <ValidationMessage For="@(() => autorActual.Apellido)" class="text-danger" />
-                        </div>
-
-                        <div class="mb-3">
-                            <label class="form-label">Biografía</label>
-                            <InputTextArea class="form-control" rows="4" @bind-Value="autorActual.Biografia" />
-                            <ValidationMessage For="@(() => autorActual.Biografia)" class="text-danger" />
                         </div>
 
                         <div class="modal-footer px-0 pb-0">
@@ -245,7 +237,7 @@
 
     private void AbrirModalAgregar()
     {
-        autorActual = new AutorDto { Id = 0, Nombre = string.Empty, Apellido = string.Empty, Biografia = string.Empty };
+        autorActual = new AutorDto { Id = 0, Nombre = string.Empty, Apellido = string.Empty };
         showModal = true;
     }
 
@@ -255,8 +247,7 @@
         { 
             Id = autor.Id, 
             Nombre = autor.Nombre, 
-            Apellido = autor.Apellido, 
-            Biografia = autor.Biografia 
+            Apellido = autor.Apellido
         };
         showModal = true;
     }
@@ -279,8 +270,7 @@
                 var crearDto = new CrearAutorDto 
                 { 
                     Nombre = autorActual.Nombre, 
-                    Apellido = autorActual.Apellido, 
-                    Biografia = autorActual.Biografia 
+                    Apellido = autorActual.Apellido
                 };
                 await AutorClient.CreateAsync(crearDto);
                 successMessage = "Autor creado exitosamente";

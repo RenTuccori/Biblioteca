@@ -61,7 +61,6 @@
                                         <tr>
                                             <th>ID</th>
                                             <th>Nombre</th>
-                                            <th>Descripción</th>
                                             <th class="text-center">Acciones</th>
                                         </tr>
                                     </thead>
@@ -71,7 +70,6 @@
                                             <tr>
                                                 <td>@genero.Id</td>
                                                 <td>@genero.Nombre</td>
-                                                <td>@(genero.Descripcion?.Length > 100 ? genero.Descripcion.Substring(0, 100) + "..." : genero.Descripcion)</td>
                                                 <td class="text-center">
                                                     <button class="btn btn-sm btn-outline-success me-1" @onclick="() => AbrirModalEditar(genero)">
                                                         <i class="fas fa-edit"></i>
@@ -143,12 +141,6 @@
                             <label class="form-label">Nombre *</label>
                             <InputText class="form-control" @bind-Value="generoActual.Nombre" />
                             <ValidationMessage For="@(() => generoActual.Nombre)" class="text-danger" />
-                        </div>
-
-                        <div class="mb-3">
-                            <label class="form-label">Descripción</label>
-                            <InputTextArea class="form-control" rows="4" @bind-Value="generoActual.Descripcion" />
-                            <ValidationMessage For="@(() => generoActual.Descripcion)" class="text-danger" />
                         </div>
 
                         <div class="modal-footer px-0 pb-0">
@@ -237,7 +229,7 @@
 
     private void AbrirModalAgregar()
     {
-        generoActual = new GeneroDto { Id = 0, Nombre = string.Empty, Descripcion = string.Empty };
+        generoActual = new GeneroDto { Id = 0, Nombre = string.Empty };
         showModal = true;
     }
 
@@ -246,8 +238,7 @@
         generoActual = new GeneroDto 
         { 
             Id = genero.Id, 
-            Nombre = genero.Nombre, 
-            Descripcion = genero.Descripcion 
+            Nombre = genero.Nombre
         };
         showModal = true;
     }
@@ -269,8 +260,7 @@
             {
                 var crearDto = new CrearGeneroDto 
                 { 
-                    Nombre = generoActual.Nombre, 
-                    Descripcion = generoActual.Descripcion 
+                    Nombre = generoActual.Nombre
                 };
                 await GeneroClient.CreateAsync(crearDto);
                 successMessage = "Género creado exitosamente";

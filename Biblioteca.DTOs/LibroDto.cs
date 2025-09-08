@@ -4,10 +4,10 @@
     public class LibroDto
     {
         public int Id { get; set; }
-        public string Titulo { get; set; }
-        public string ISBN { get; set; }
-        public string AutorNombreCompleto { get; set; }
-        public string GeneroNombre { get; set; }
+        public string Titulo { get; set; } = string.Empty;
+        public string ISBN { get; set; } = string.Empty;
+        public string AutorNombreCompleto { get; set; } = string.Empty;
+        public string GeneroNombre { get; set; } = string.Empty;
         public int AutorId { get; set; }
         public int GeneroId { get; set; }
     }

@@ -9,19 +9,19 @@ builder.Services.AddServerSideBlazor();
 // Configurar HttpClient para API
 builder.Services.AddHttpClient<AutorApiClient>(client =>
 {
-    client.BaseAddress = new Uri("https://localhost:7142/"); // Ajustar según tu puerto de WebAPI
+    client.BaseAddress = new Uri("https://localhost:7152/"); // Corregido el puerto según launchSettings.json
     client.DefaultRequestHeaders.Add("Accept", "application/json");
 });
 
 builder.Services.AddHttpClient<GeneroApiClient>(client =>
 {
-    client.BaseAddress = new Uri("https://localhost:7142/"); // Ajustar según tu puerto de WebAPI
+    client.BaseAddress = new Uri("https://localhost:7152/"); // Corregido el puerto según launchSettings.json
     client.DefaultRequestHeaders.Add("Accept", "application/json");
 });
 
 builder.Services.AddHttpClient<LibroApiClient>(client =>
 {
-    client.BaseAddress = new Uri("https://localhost:7142/"); // Ajustar según tu puerto de WebAPI
+    client.BaseAddress = new Uri("https://localhost:7152/"); // Corregido el puerto según launchSettings.json
     client.DefaultRequestHeaders.Add("Accept", "application/json");
 });
 
