@@ -1,0 +1,402 @@
+@page "/libros"
+@using Biblioteca.API.Clients
+@using Biblioteca.DTOs
+@inject LibroApiClient LibroClient
+@inject AutorApiClient AutorClient
+@inject GeneroApiClient GeneroClient
+@inject IJSRuntime JSRuntime
+
+<PageTitle>Libros</PageTitle>
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2><i class="fas fa-book"></i> Gestión de Libros</h2>
+                <button class="btn btn-info" @onclick="AbrirModalAgregar">
+                    <i class="fas fa-plus"></i> Nuevo Libro
+                </button>
+            </div>
+        </div>
+    </div>
+
+    @if (isLoading)
+    {
+        <div class="text-center">
+            <div class="spinner-border text-info" role="status">
+                <span class="visually-hidden">Cargando...</span>
+            </div>
+        </div>
+    }
+    else if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <div class="alert alert-danger" role="alert">
+            <i class="fas fa-exclamation-triangle"></i> @errorMessage
+        </div>
+    }
+    else
+    {
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h5 class="mb-0">Catálogo de Libros</h5>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="input-group">
+                                    <input type="text" class="form-control" placeholder="Buscar libro..." @bind="searchText" @onkeypress="OnSearchKeyPress" />
+                                    <button class="btn btn-outline-secondary" @onclick="BuscarLibros">
+                                        <i class="fas fa-search"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body p-0">
+                        @if (libros?.Any() == true)
+                        {
+                            <div class="table-responsive">
+                                <table class="table table-hover mb-0">
+                                    <thead class="table-dark">
+                                        <tr>
+                                            <th>ID</th>
+                                            <th>Título</th>
+                                            <th>ISBN</th>
+                                            <th>Autor</th>
+                                            <th>Género</th>
+                                            <th class="text-center">Acciones</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var libro in libros)
+                                        {
+                                            <tr>
+                                                <td>@libro.Id</td>
+                                                <td>@libro.Titulo</td>
+                                                <td>@libro.ISBN</td>
+                                                <td>@libro.AutorNombre</td>
+                                                <td>@libro.GeneroNombre</td>
+                                                <td class="text-center">
+                                                    <button class="btn btn-sm btn-outline-info me-1" @onclick="() => AbrirModalEditar(libro)">
+                                                        <i class="fas fa-edit"></i>
+                                                    </button>
+                                                    <button class="btn btn-sm btn-outline-danger" @onclick="() => EliminarLibro(libro.Id)">
+                                                        <i class="fas fa-trash"></i>
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="text-center p-4">
+                                <i class="fas fa-book-open fa-3x text-muted mb-3"></i>
+                                <p class="text-muted">No hay libros para mostrar</p>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    @if (!string.IsNullOrEmpty(successMessage))
+    {
+        <div class="position-fixed top-0 end-0 p-3" style="z-index: 1050">
+            <div class="toast show" role="alert">
+                <div class="toast-header bg-info text-white">
+                    <i class="fas fa-check-circle me-2"></i>
+                    <strong class="me-auto">Éxito</strong>
+                    <button type="button" class="btn-close btn-close-white" @onclick="() => successMessage = string.Empty"></button>
+                </div>
+                <div class="toast-body">
+                    @successMessage
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+<!-- Modal para Agregar/Editar Libro -->
+@if (showModal)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        @if (libroActual?.Id == 0)
+                        {
+                            <i class="fas fa-plus"></i> <text>Nuevo Libro</text>
+                        }
+                        else
+                        {
+                            <i class="fas fa-edit"></i> <text>Editar Libro</text>
+                        }
+                    </h5>
+                    <button type="button" class="btn-close" @onclick="CerrarModal"></button>
+                </div>
+                <div class="modal-body">
+                    <EditForm Model="libroActual" OnValidSubmit="GuardarLibro">
+                        <DataAnnotationsValidator />
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Título *</label>
+                                    <InputText class="form-control" @bind-Value="libroActual.Titulo" />
+                                    <ValidationMessage For="@(() => libroActual.Titulo)" class="text-danger" />
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">ISBN *</label>
+                                    <InputText class="form-control" @bind-Value="libroActual.ISBN" />
+                                    <ValidationMessage For="@(() => libroActual.ISBN)" class="text-danger" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Autor *</label>
+                                    <InputSelect class="form-select" @bind-Value="libroActual.AutorId">
+                                        <option value="0">Seleccionar autor...</option>
+                                        @if (autores != null)
+                                        {
+                                            @foreach (var autor in autores)
+                                            {
+                                                <option value="@autor.Id">@autor.Nombre @autor.Apellido</option>
+                                            }
+                                        }
+                                    </InputSelect>
+                                    <ValidationMessage For="@(() => libroActual.AutorId)" class="text-danger" />
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Género *</label>
+                                    <InputSelect class="form-select" @bind-Value="libroActual.GeneroId">
+                                        <option value="0">Seleccionar género...</option>
+                                        @if (generos != null)
+                                        {
+                                            @foreach (var genero in generos)
+                                            {
+                                                <option value="@genero.Id">@genero.Nombre</option>
+                                            }
+                                        }
+                                    </InputSelect>
+                                    <ValidationMessage For="@(() => libroActual.GeneroId)" class="text-danger" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="modal-footer px-0 pb-0">
+                            <button type="button" class="btn btn-secondary" @onclick="CerrarModal">Cancelar</button>
+                            <button type="submit" class="btn btn-info" disabled="@isProcessing">
+                                @if (isProcessing)
+                                {
+                                    <span class="spinner-border spinner-border-sm me-2"></span>
+                                }
+                                Guardar
+                            </button>
+                        </div>
+                    </EditForm>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private List<LibroDto>? libros;
+    private List<AutorDto>? autores;
+    private List<GeneroDto>? generos;
+    private LibroDto libroActual = new();
+    private bool showModal = false;
+    private bool isLoading = true;
+    private bool isProcessing = false;
+    private string errorMessage = string.Empty;
+    private string successMessage = string.Empty;
+    private string searchText = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CargarDatos();
+    }
+
+    private async Task CargarDatos()
+    {
+        try
+        {
+            isLoading = true;
+            errorMessage = string.Empty;
+            
+            var tasks = new List<Task>
+            {
+                CargarLibros(),
+                CargarAutores(),
+                CargarGeneros()
+            };
+            
+            await Task.WhenAll(tasks);
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error al cargar datos: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task CargarLibros()
+    {
+        libros = (await LibroClient.GetAllAsync()).ToList();
+    }
+
+    private async Task CargarAutores()
+    {
+        autores = (await AutorClient.GetAllAsync()).ToList();
+    }
+
+    private async Task CargarGeneros()
+    {
+        generos = (await GeneroClient.GetAllAsync()).ToList();
+    }
+
+    private async Task BuscarLibros()
+    {
+        try
+        {
+            isLoading = true;
+            errorMessage = string.Empty;
+            
+            if (string.IsNullOrWhiteSpace(searchText))
+            {
+                await CargarLibros();
+            }
+            else
+            {
+                libros = (await LibroClient.GetByCriteriaAsync(searchText)).ToList();
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error al buscar libros: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task OnSearchKeyPress(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            await BuscarLibros();
+        }
+    }
+
+    private async Task AbrirModalAgregar()
+    {
+        libroActual = new LibroDto { Id = 0, Titulo = string.Empty, ISBN = string.Empty };
+        
+        if (autores == null || generos == null)
+        {
+            await CargarAutores();
+            await CargarGeneros();
+        }
+        
+        showModal = true;
+    }
+
+    private async Task AbrirModalEditar(LibroDto libro)
+    {
+        libroActual = new LibroDto 
+        { 
+            Id = libro.Id, 
+            Titulo = libro.Titulo, 
+            ISBN = libro.ISBN,
+            AutorId = libro.AutorId,
+            GeneroId = libro.GeneroId
+        };
+        
+        if (autores == null || generos == null)
+        {
+            await CargarAutores();
+            await CargarGeneros();
+        }
+        
+        showModal = true;
+    }
+
+    private void CerrarModal()
+    {
+        showModal = false;
+        libroActual = new();
+    }
+
+    private async Task GuardarLibro()
+    {
+        try
+        {
+            isProcessing = true;
+            errorMessage = string.Empty;
+
+            if (libroActual.Id == 0)
+            {
+                var crearDto = new CrearLibroDto 
+                { 
+                    Titulo = libroActual.Titulo, 
+                    ISBN = libroActual.ISBN,
+                    AutorId = libroActual.AutorId,
+                    GeneroId = libroActual.GeneroId
+                };
+                await LibroClient.CreateAsync(crearDto);
+                successMessage = "Libro creado exitosamente";
+            }
+            else
+            {
+                await LibroClient.UpdateAsync(libroActual);
+                successMessage = "Libro actualizado exitosamente";
+            }
+
+            CerrarModal();
+            await CargarLibros();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error al guardar libro: {ex.Message}";
+        }
+        finally
+        {
+            isProcessing = false;
+        }
+    }
+
+    private async Task EliminarLibro(int id)
+    {
+        var confirmed = await JSRuntime.InvokeAsync<bool>("confirm", "¿Está seguro de que desea eliminar este libro?");
+        if (!confirmed) return;
+
+        try
+        {
+            await LibroClient.DeleteAsync(id);
+            successMessage = "Libro eliminado exitosamente";
+            await CargarLibros();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error al eliminar libro: {ex.Message}";
+        }
+    }
+}

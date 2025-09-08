@@ -1,0 +1,12 @@
+{
+  "profiles": {
+    "Biblioteca.Blazor.WebAssembly": {
+      "commandName": "Project",
+      "launchBrowser": true,
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      },
+      "applicationUrl": "https://localhost:59292;http://localhost:59293"
+    }
+  }
+}

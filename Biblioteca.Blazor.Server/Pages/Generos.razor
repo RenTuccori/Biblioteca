@@ -1,0 +1,313 @@
+@page "/generos"
+@using Biblioteca.API.Clients
+@using Biblioteca.DTOs
+@inject GeneroApiClient GeneroClient
+@inject IJSRuntime JSRuntime
+
+<PageTitle>Géneros</PageTitle>
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2><i class="fas fa-tags"></i> Gestión de Géneros</h2>
+                <button class="btn btn-success" @onclick="AbrirModalAgregar">
+                    <i class="fas fa-plus"></i> Nuevo Género
+                </button>
+            </div>
+        </div>
+    </div>
+
+    @if (isLoading)
+    {
+        <div class="text-center">
+            <div class="spinner-border text-success" role="status">
+                <span class="visually-hidden">Cargando...</span>
+            </div>
+        </div>
+    }
+    else if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <div class="alert alert-danger" role="alert">
+            <i class="fas fa-exclamation-triangle"></i> @errorMessage
+        </div>
+    }
+    else
+    {
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h5 class="mb-0">Lista de Géneros</h5>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="input-group">
+                                    <input type="text" class="form-control" placeholder="Buscar género..." @bind="searchText" @onkeypress="OnSearchKeyPress" />
+                                    <button class="btn btn-outline-secondary" @onclick="BuscarGeneros">
+                                        <i class="fas fa-search"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body p-0">
+                        @if (generos?.Any() == true)
+                        {
+                            <div class="table-responsive">
+                                <table class="table table-hover mb-0">
+                                    <thead class="table-dark">
+                                        <tr>
+                                            <th>ID</th>
+                                            <th>Nombre</th>
+                                            <th>Descripción</th>
+                                            <th class="text-center">Acciones</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var genero in generos)
+                                        {
+                                            <tr>
+                                                <td>@genero.Id</td>
+                                                <td>@genero.Nombre</td>
+                                                <td>@(genero.Descripcion?.Length > 100 ? genero.Descripcion.Substring(0, 100) + "..." : genero.Descripcion)</td>
+                                                <td class="text-center">
+                                                    <button class="btn btn-sm btn-outline-success me-1" @onclick="() => AbrirModalEditar(genero)">
+                                                        <i class="fas fa-edit"></i>
+                                                    </button>
+                                                    <button class="btn btn-sm btn-outline-danger" @onclick="() => EliminarGenero(genero.Id)">
+                                                        <i class="fas fa-trash"></i>
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="text-center p-4">
+                                <i class="fas fa-tags fa-3x text-muted mb-3"></i>
+                                <p class="text-muted">No hay géneros para mostrar</p>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    @if (!string.IsNullOrEmpty(successMessage))
+    {
+        <div class="position-fixed top-0 end-0 p-3" style="z-index: 1050">
+            <div class="toast show" role="alert">
+                <div class="toast-header bg-success text-white">
+                    <i class="fas fa-check-circle me-2"></i>
+                    <strong class="me-auto">Éxito</strong>
+                    <button type="button" class="btn-close btn-close-white" @onclick="() => successMessage = string.Empty"></button>
+                </div>
+                <div class="toast-body">
+                    @successMessage
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+<!-- Modal para Agregar/Editar Género -->
+@if (showModal)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        @if (generoActual?.Id == 0)
+                        {
+                            <i class="fas fa-plus"></i> <text>Nuevo Género</text>
+                        }
+                        else
+                        {
+                            <i class="fas fa-edit"></i> <text>Editar Género</text>
+                        }
+                    </h5>
+                    <button type="button" class="btn-close" @onclick="CerrarModal"></button>
+                </div>
+                <div class="modal-body">
+                    <EditForm Model="generoActual" OnValidSubmit="GuardarGenero">
+                        <DataAnnotationsValidator />
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Nombre *</label>
+                            <InputText class="form-control" @bind-Value="generoActual.Nombre" />
+                            <ValidationMessage For="@(() => generoActual.Nombre)" class="text-danger" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Descripción</label>
+                            <InputTextArea class="form-control" rows="4" @bind-Value="generoActual.Descripcion" />
+                            <ValidationMessage For="@(() => generoActual.Descripcion)" class="text-danger" />
+                        </div>
+
+                        <div class="modal-footer px-0 pb-0">
+                            <button type="button" class="btn btn-secondary" @onclick="CerrarModal">Cancelar</button>
+                            <button type="submit" class="btn btn-success" disabled="@isProcessing">
+                                @if (isProcessing)
+                                {
+                                    <span class="spinner-border spinner-border-sm me-2"></span>
+                                }
+                                Guardar
+                            </button>
+                        </div>
+                    </EditForm>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private List<GeneroDto>? generos;
+    private GeneroDto generoActual = new();
+    private bool showModal = false;
+    private bool isLoading = true;
+    private bool isProcessing = false;
+    private string errorMessage = string.Empty;
+    private string successMessage = string.Empty;
+    private string searchText = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CargarGeneros();
+    }
+
+    private async Task CargarGeneros()
+    {
+        try
+        {
+            isLoading = true;
+            errorMessage = string.Empty;
+            generos = (await GeneroClient.GetAllAsync()).ToList();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error al cargar géneros: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task BuscarGeneros()
+    {
+        try
+        {
+            isLoading = true;
+            errorMessage = string.Empty;
+            
+            if (string.IsNullOrWhiteSpace(searchText))
+            {
+                generos = (await GeneroClient.GetAllAsync()).ToList();
+            }
+            else
+            {
+                generos = (await GeneroClient.GetByCriteriaAsync(searchText)).ToList();
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error al buscar géneros: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task OnSearchKeyPress(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            await BuscarGeneros();
+        }
+    }
+
+    private void AbrirModalAgregar()
+    {
+        generoActual = new GeneroDto { Id = 0, Nombre = string.Empty, Descripcion = string.Empty };
+        showModal = true;
+    }
+
+    private void AbrirModalEditar(GeneroDto genero)
+    {
+        generoActual = new GeneroDto 
+        { 
+            Id = genero.Id, 
+            Nombre = genero.Nombre, 
+            Descripcion = genero.Descripcion 
+        };
+        showModal = true;
+    }
+
+    private void CerrarModal()
+    {
+        showModal = false;
+        generoActual = new();
+    }
+
+    private async Task GuardarGenero()
+    {
+        try
+        {
+            isProcessing = true;
+            errorMessage = string.Empty;
+
+            if (generoActual.Id == 0)
+            {
+                var crearDto = new CrearGeneroDto 
+                { 
+                    Nombre = generoActual.Nombre, 
+                    Descripcion = generoActual.Descripcion 
+                };
+                await GeneroClient.CreateAsync(crearDto);
+                successMessage = "Género creado exitosamente";
+            }
+            else
+            {
+                await GeneroClient.UpdateAsync(generoActual);
+                successMessage = "Género actualizado exitosamente";
+            }
+
+            CerrarModal();
+            await CargarGeneros();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error al guardar género: {ex.Message}";
+        }
+        finally
+        {
+            isProcessing = false;
+        }
+    }
+
+    private async Task EliminarGenero(int id)
+    {
+        var confirmed = await JSRuntime.InvokeAsync<bool>("confirm", "¿Está seguro de que desea eliminar este género?");
+        if (!confirmed) return;
+
+        try
+        {
+            await GeneroClient.DeleteAsync(id);
+            successMessage = "Género eliminado exitosamente";
+            await CargarGeneros();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error al eliminar género: {ex.Message}";
+        }
+    }
+}
