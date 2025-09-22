@@ -7,9 +7,9 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddRazorPages();
 
-// Configurar Entity Framework con SQLite usando configuración centralizada
+// Configurar Entity Framework con SQL Server
 builder.Services.AddDbContext<BibliotecaContext>(options =>
-    options.UseSqlite(DatabaseConfiguration.ConnectionString));
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // Registrar repositorios
 builder.Services.AddScoped<AutorRepository>();
@@ -42,7 +42,7 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
-// Crear la base de datos si no existe usando configuración centralizada
+// Crear la base de datos si no existe usando configuraciï¿½n centralizada
 using (var scope = app.Services.CreateScope())
 {
     var context = scope.ServiceProvider.GetRequiredService<BibliotecaContext>();
@@ -70,19 +70,19 @@ app.UseAuthorization();
 // API Endpoints
 app.MapRazorPages();
 
-// Endpoints para Géneros
+// Endpoints para Gï¿½neros
 app.MapGet("/api/generos", (GeneroService service) =>
 {
     return Results.Ok(service.GetAll());
 })
-.WithTags("Géneros");
+.WithTags("Gï¿½neros");
 
 app.MapGet("/api/generos/{id}", (int id, GeneroService service) =>
 {
     var genero = service.Get(id);
     return genero != null ? Results.Ok(genero) : Results.NotFound();
 })
-.WithTags("Géneros");
+.WithTags("Gï¿½neros");
 
 app.MapPost("/api/generos", (Biblioteca.DTOs.CrearGeneroDto dto, GeneroService service) =>
 {
@@ -96,7 +96,7 @@ app.MapPost("/api/generos", (Biblioteca.DTOs.CrearGeneroDto dto, GeneroService s
         return Results.BadRequest(ex.Message);
     }
 })
-.WithTags("Géneros");
+.WithTags("Gï¿½neros");
 
 app.MapPut("/api/generos", (Biblioteca.DTOs.GeneroDto dto, GeneroService service) =>
 {
@@ -110,7 +110,7 @@ app.MapPut("/api/generos", (Biblioteca.DTOs.GeneroDto dto, GeneroService service
         return Results.BadRequest(ex.Message);
     }
 })
-.WithTags("Géneros");
+.WithTags("Gï¿½neros");
 
 app.MapDelete("/api/generos/{id}", (int id, GeneroService service) =>
 {
@@ -124,14 +124,14 @@ app.MapDelete("/api/generos/{id}", (int id, GeneroService service) =>
         return Results.BadRequest(ex.Message);
     }
 })
-.WithTags("Géneros");
+.WithTags("Gï¿½neros");
 
 app.MapGet("/api/generos/criteria", (string? texto, GeneroService service) =>
 {
     var criterio = new Biblioteca.DTOs.BusquedaCriterioDto { Texto = texto ?? "" };
     return Results.Ok(service.GetByCriteria(criterio));
 })
-.WithTags("Géneros");
+.WithTags("Gï¿½neros");
 
 // Endpoints para Autores
 app.MapGet("/api/autores", (AutorService service) =>
