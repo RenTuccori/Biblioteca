@@ -37,6 +37,8 @@
             cmbAutor = new ComboBox();
             label4 = new Label();
             cmbGenero = new ComboBox();
+            label5 = new Label();
+            cmbEditorial = new ComboBox();
             btnAgregar = new Button();
             btnModificar = new Button();
             BtnEliminar = new Button();
@@ -46,7 +48,7 @@
             // dgvLibros
             // 
             dgvLibros.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            dgvLibros.Location = new Point(119, 188);
+            dgvLibros.Location = new Point(119, 228);
             dgvLibros.Margin = new Padding(3, 4, 3, 4);
             dgvLibros.Name = "dgvLibros";
             dgvLibros.RowHeadersWidth = 51;
@@ -125,6 +127,24 @@
             cmbGenero.TabIndex = 8;
             cmbGenero.SelectedIndexChanged += comboBox2_SelectedIndexChanged;
             // 
+            // label5
+            // 
+            label5.AutoSize = true;
+            label5.Location = new Point(119, 171);
+            label5.Name = "label5";
+            label5.Size = new Size(64, 20);
+            label5.TabIndex = 12;
+            label5.Text = "Editorial";
+            // 
+            // cmbEditorial
+            // 
+            cmbEditorial.FormattingEnabled = true;
+            cmbEditorial.Location = new Point(206, 167);
+            cmbEditorial.Margin = new Padding(3, 4, 3, 4);
+            cmbEditorial.Name = "cmbEditorial";
+            cmbEditorial.Size = new Size(188, 28);
+            cmbEditorial.TabIndex = 13;
+            // 
             // btnAgregar
             // 
             btnAgregar.Location = new Point(401, 11);
@@ -163,6 +183,8 @@
             AutoScaleDimensions = new SizeF(8F, 20F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(914, 600);
+            Controls.Add(cmbEditorial);
+            Controls.Add(label5);
             Controls.Add(BtnEliminar);
             Controls.Add(btnModificar);
             Controls.Add(btnAgregar);
@@ -195,6 +217,8 @@
         private ComboBox cmbAutor;
         private Label label4;
         private ComboBox cmbGenero;
+        private Label label5;
+        private ComboBox cmbEditorial;
         private Button btnAgregar;
         private Button btnModificar;
         private Button BtnEliminar;

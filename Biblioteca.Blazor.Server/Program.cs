@@ -7,21 +7,47 @@ builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
 
 // Configurar HttpClient para API
+var apiBaseUrl = "https://localhost:7152/";
+
 builder.Services.AddHttpClient<AutorApiClient>(client =>
 {
-    client.BaseAddress = new Uri("https://localhost:7152/"); // Corregido el puerto según launchSettings.json
+    client.BaseAddress = new Uri(apiBaseUrl);
     client.DefaultRequestHeaders.Add("Accept", "application/json");
 });
 
 builder.Services.AddHttpClient<GeneroApiClient>(client =>
 {
-    client.BaseAddress = new Uri("https://localhost:7152/"); // Corregido el puerto según launchSettings.json
+    client.BaseAddress = new Uri(apiBaseUrl);
     client.DefaultRequestHeaders.Add("Accept", "application/json");
 });
 
 builder.Services.AddHttpClient<LibroApiClient>(client =>
 {
-    client.BaseAddress = new Uri("https://localhost:7152/"); // Corregido el puerto según launchSettings.json
+    client.BaseAddress = new Uri(apiBaseUrl);
+    client.DefaultRequestHeaders.Add("Accept", "application/json");
+});
+
+builder.Services.AddHttpClient<EditorialApiClient>(client =>
+{
+    client.BaseAddress = new Uri(apiBaseUrl);
+    client.DefaultRequestHeaders.Add("Accept", "application/json");
+});
+
+builder.Services.AddHttpClient<PersonaApiClient>(client =>
+{
+    client.BaseAddress = new Uri(apiBaseUrl);
+    client.DefaultRequestHeaders.Add("Accept", "application/json");
+});
+
+builder.Services.AddHttpClient<UsuarioApiClient>(client =>
+{
+    client.BaseAddress = new Uri(apiBaseUrl);
+    client.DefaultRequestHeaders.Add("Accept", "application/json");
+});
+
+builder.Services.AddHttpClient<PrestamoApiClient>(client =>
+{
+    client.BaseAddress = new Uri(apiBaseUrl);
     client.DefaultRequestHeaders.Add("Accept", "application/json");
 });
 

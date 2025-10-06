@@ -7,5 +7,7 @@
         public string ISBN { get; set; } = string.Empty;
         public int AutorId { get; set; }
         public int GeneroId { get; set; }
+        public int EditorialId { get; set; }
+        public string Estado { get; set; } = "disponible";
     }
 }

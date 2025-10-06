@@ -9,12 +9,14 @@ namespace Biblioteca.Domain.Services
         private readonly LibroRepository _libroRepository;
         private readonly AutorRepository _autorRepository;
         private readonly GeneroRepository _generoRepository;
+        private readonly EditorialRepository _editorialRepository;
 
-        public LibroService(LibroRepository libroRepository, AutorRepository autorRepository, GeneroRepository generoRepository)
+        public LibroService(LibroRepository libroRepository, AutorRepository autorRepository, GeneroRepository generoRepository, EditorialRepository editorialRepository)
         {
             _libroRepository = libroRepository;
             _autorRepository = autorRepository;
             _generoRepository = generoRepository;
+            _editorialRepository = editorialRepository;
         }
 
         public LibroDto Add(CrearLibroDto dto)
@@ -22,7 +24,7 @@ namespace Biblioteca.Domain.Services
             if (dto == null)
                 throw new ArgumentNullException(nameof(dto));
 
-            // Verificar que el autor y género existan
+            // Verificar que el autor, género y editorial existan
             var autor = _autorRepository.Get(dto.AutorId);
             if (autor == null)
                 throw new ArgumentException($"No existe un autor con Id {dto.AutorId}");
@@ -31,7 +33,11 @@ namespace Biblioteca.Domain.Services
             if (genero == null)
                 throw new ArgumentException($"No existe un género con Id {dto.GeneroId}");
 
-            var libro = new Libro(0, dto.Titulo, dto.ISBN, dto.AutorId, dto.GeneroId);
+            var editorial = _editorialRepository.Get(dto.EditorialId);
+            if (editorial == null)
+                throw new ArgumentException($"No existe una editorial con Id {dto.EditorialId}");
+
+            var libro = new Libro(0, dto.Titulo, dto.ISBN, dto.AutorId, dto.GeneroId, dto.EditorialId, dto.Estado);
             
             _libroRepository.Add(libro);
             _libroRepository.SaveChanges();
@@ -43,8 +49,11 @@ namespace Biblioteca.Domain.Services
                 ISBN = libro.ISBN,
                 AutorId = libro.AutorId,
                 GeneroId = libro.GeneroId,
+                EditorialId = libro.EditorialId,
+                Estado = libro.Estado,
                 AutorNombreCompleto = $"{autor.Nombre} {autor.Apellido}",
-                GeneroNombre = genero.Nombre
+                GeneroNombre = genero.Nombre,
+                EditorialNombre = editorial.Nombre
             };
         }
 
@@ -69,8 +78,11 @@ namespace Biblioteca.Domain.Services
                 ISBN = libro.ISBN,
                 AutorId = libro.AutorId,
                 GeneroId = libro.GeneroId,
+                EditorialId = libro.EditorialId,
+                Estado = libro.Estado,
                 AutorNombreCompleto = libro.Autor != null ? $"{libro.Autor.Nombre} {libro.Autor.Apellido}" : "",
-                GeneroNombre = libro.Genero?.Nombre ?? ""
+                GeneroNombre = libro.Genero?.Nombre ?? "",
+                EditorialNombre = libro.Editorial?.Nombre ?? ""
             };
         }
 
@@ -84,8 +96,11 @@ namespace Biblioteca.Domain.Services
                 ISBN = l.ISBN,
                 AutorId = l.AutorId,
                 GeneroId = l.GeneroId,
+                EditorialId = l.EditorialId,
+                Estado = l.Estado,
                 AutorNombreCompleto = l.Autor != null ? $"{l.Autor.Nombre} {l.Autor.Apellido}" : "",
-                GeneroNombre = l.Genero?.Nombre ?? ""
+                GeneroNombre = l.Genero?.Nombre ?? "",
+                EditorialNombre = l.Editorial?.Nombre ?? ""
             });
         }
 
@@ -94,7 +109,7 @@ namespace Biblioteca.Domain.Services
             if (dto == null)
                 throw new ArgumentNullException(nameof(dto));
 
-            // Verificar que el autor y género existan
+            // Verificar que el autor, género y editorial existan
             var autor = _autorRepository.Get(dto.AutorId);
             if (autor == null)
                 throw new ArgumentException($"No existe un autor con Id {dto.AutorId}");
@@ -103,7 +118,11 @@ namespace Biblioteca.Domain.Services
             if (genero == null)
                 throw new ArgumentException($"No existe un género con Id {dto.GeneroId}");
 
-            var libro = new Libro(dto.Id, dto.Titulo, dto.ISBN, dto.AutorId, dto.GeneroId);
+            var editorial = _editorialRepository.Get(dto.EditorialId);
+            if (editorial == null)
+                throw new ArgumentException($"No existe una editorial con Id {dto.EditorialId}");
+
+            var libro = new Libro(dto.Id, dto.Titulo, dto.ISBN, dto.AutorId, dto.GeneroId, dto.EditorialId, dto.Estado);
             
             var result = _libroRepository.Update(libro);
             if (result)
@@ -122,8 +141,11 @@ namespace Biblioteca.Domain.Services
                 ISBN = l.ISBN,
                 AutorId = l.AutorId,
                 GeneroId = l.GeneroId,
+                EditorialId = l.EditorialId,
+                Estado = l.Estado,
                 AutorNombreCompleto = l.Autor != null ? $"{l.Autor.Nombre} {l.Autor.Apellido}" : "",
-                GeneroNombre = l.Genero?.Nombre ?? ""
+                GeneroNombre = l.Genero?.Nombre ?? "",
+                EditorialNombre = l.Editorial?.Nombre ?? ""
             });
         }
 
@@ -137,8 +159,11 @@ namespace Biblioteca.Domain.Services
                 ISBN = l.ISBN,
                 AutorId = l.AutorId,
                 GeneroId = l.GeneroId,
+                EditorialId = l.EditorialId,
+                Estado = l.Estado,
                 AutorNombreCompleto = l.Autor != null ? $"{l.Autor.Nombre} {l.Autor.Apellido}" : "",
-                GeneroNombre = l.Genero?.Nombre ?? ""
+                GeneroNombre = l.Genero?.Nombre ?? "",
+                EditorialNombre = l.Editorial?.Nombre ?? ""
             });
         }
 
@@ -152,8 +177,47 @@ namespace Biblioteca.Domain.Services
                 ISBN = l.ISBN,
                 AutorId = l.AutorId,
                 GeneroId = l.GeneroId,
+                EditorialId = l.EditorialId,
+                Estado = l.Estado,
                 AutorNombreCompleto = l.Autor != null ? $"{l.Autor.Nombre} {l.Autor.Apellido}" : "",
-                GeneroNombre = l.Genero?.Nombre ?? ""
+                GeneroNombre = l.Genero?.Nombre ?? "",
+                EditorialNombre = l.Editorial?.Nombre ?? ""
+            });
+        }
+
+        public IEnumerable<LibroDto> GetByEditorial(int editorialId)
+        {
+            var libros = _libroRepository.GetByEditorial(editorialId);
+            return libros.Select(l => new LibroDto
+            {
+                Id = l.Id,
+                Titulo = l.Titulo,
+                ISBN = l.ISBN,
+                AutorId = l.AutorId,
+                GeneroId = l.GeneroId,
+                EditorialId = l.EditorialId,
+                Estado = l.Estado,
+                AutorNombreCompleto = l.Autor != null ? $"{l.Autor.Nombre} {l.Autor.Apellido}" : "",
+                GeneroNombre = l.Genero?.Nombre ?? "",
+                EditorialNombre = l.Editorial?.Nombre ?? ""
+            });
+        }
+
+        public IEnumerable<LibroDto> GetByEstado(string estado)
+        {
+            var libros = _libroRepository.GetByEstado(estado);
+            return libros.Select(l => new LibroDto
+            {
+                Id = l.Id,
+                Titulo = l.Titulo,
+                ISBN = l.ISBN,
+                AutorId = l.AutorId,
+                GeneroId = l.GeneroId,
+                EditorialId = l.EditorialId,
+                Estado = l.Estado,
+                AutorNombreCompleto = l.Autor != null ? $"{l.Autor.Nombre} {l.Autor.Apellido}" : "",
+                GeneroNombre = l.Genero?.Nombre ?? "",
+                EditorialNombre = l.Editorial?.Nombre ?? ""
             });
         }
     }

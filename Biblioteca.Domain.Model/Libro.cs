@@ -7,8 +7,11 @@
         private string _isbn = string.Empty;
         private int _autorId;
         private int _generoId;
+        private int _editorialId;
+        private string _estado = "disponible";
         private Autor? _autor;
         private Genero? _genero;
+        private Editorial? _editorial;
 
         public int Id 
         { 
@@ -40,6 +43,18 @@
             private set => _generoId = value; 
         }
 
+        public int EditorialId
+        {
+            get => _editorialId;
+            private set => _editorialId = value;
+        }
+
+        public string Estado
+        {
+            get => _estado;
+            private set => _estado = value;
+        }
+
         // Propiedades de navegación
         public Autor? Autor 
         { 
@@ -53,25 +68,35 @@
             private set => _genero = value; 
         }
 
+        public Editorial? Editorial
+        {
+            get => _editorial;
+            private set => _editorial = value;
+        }
+
         // Constructor sin parámetros para Entity Framework
         protected Libro() { }
 
-        public Libro(int id, string titulo, string isbn, Autor autor, Genero genero)
+        public Libro(int id, string titulo, string isbn, Autor autor, Genero genero, Editorial editorial, string estado = "disponible")
         {
             SetId(id);
             SetTitulo(titulo);
             SetISBN(isbn);
             SetAutor(autor);
             SetGenero(genero);
+            SetEditorial(editorial);
+            SetEstado(estado);
         }
 
-        public Libro(int id, string titulo, string isbn, int autorId, int generoId)
+        public Libro(int id, string titulo, string isbn, int autorId, int generoId, int editorialId, string estado = "disponible")
         {
             SetId(id);
             SetTitulo(titulo);
             SetISBN(isbn);
             SetAutorId(autorId);
             SetGeneroId(generoId);
+            SetEditorialId(editorialId);
+            SetEstado(estado);
         }
 
         public void SetId(int id) 
@@ -109,6 +134,22 @@
             _generoId = generoId;
         }
 
+        public void SetEditorialId(int editorialId)
+        {
+            if (editorialId <= 0)
+                throw new ArgumentException("El EditorialId debe ser mayor que 0.", nameof(editorialId));
+            _editorialId = editorialId;
+        }
+
+        public void SetEstado(string estado)
+        {
+            if (string.IsNullOrWhiteSpace(estado))
+                throw new ArgumentException("El estado no puede estar vacío.", nameof(estado));
+            if (estado != "disponible" && estado != "prestado")
+                throw new ArgumentException("El estado debe ser 'disponible' o 'prestado'.", nameof(estado));
+            _estado = estado;
+        }
+
         public void SetAutor(Autor autor)
         {
             if (autor == null)
@@ -123,6 +164,14 @@
                 throw new ArgumentNullException(nameof(genero), "El género no puede ser nulo.");
             _genero = genero;
             _generoId = genero.Id;
+        }
+
+        public void SetEditorial(Editorial editorial)
+        {
+            if (editorial == null)
+                throw new ArgumentNullException(nameof(editorial), "La editorial no puede ser nula.");
+            _editorial = editorial;
+            _editorialId = editorial.Id;
         }
     }
 }

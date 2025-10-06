@@ -9,6 +9,7 @@ namespace Biblioteca.UI.Desktop
         private readonly LibroService _libroService;
         private readonly AutorService _autorService;
         private readonly GeneroService _generoService;
+        private readonly EditorialService _editorialService;
 
         public FormLibros()
         {
@@ -19,10 +20,12 @@ namespace Biblioteca.UI.Desktop
             var libroRepository = new LibroRepository(context);
             var autorRepository = new AutorRepository(context);
             var generoRepository = new GeneroRepository(context);
+            var editorialRepository = new EditorialRepository(context);
             
-            _libroService = new LibroService(libroRepository, autorRepository, generoRepository);
+            _libroService = new LibroService(libroRepository, autorRepository, generoRepository, editorialRepository);
             _autorService = new AutorService(autorRepository);
             _generoService = new GeneroService(generoRepository);
+            _editorialService = new EditorialService(editorialRepository);
         }
 
         private void FormLibros_Load(object sender, EventArgs e)
@@ -52,6 +55,16 @@ namespace Biblioteca.UI.Desktop
             cmbGenero.DataSource = generos;
             cmbGenero.DisplayMember = "Nombre";
             cmbGenero.ValueMember = "Id";
+
+            // Cargar ComboBox de Editoriales
+            var editoriales = _editorialService.GetAll().Select(e => new
+            {
+                Id = e.Id,
+                Nombre = e.Nombre
+            }).ToList();
+            cmbEditorial.DataSource = editoriales;
+            cmbEditorial.DisplayMember = "Nombre";
+            cmbEditorial.ValueMember = "Id";
         }
 
         private void CargarLibros()
@@ -74,6 +87,7 @@ namespace Biblioteca.UI.Desktop
                 // Seleccionamos el valor correcto en los ComboBox
                 cmbAutor.SelectedValue = libroSeleccionado.AutorId;
                 cmbGenero.SelectedValue = libroSeleccionado.GeneroId;
+                cmbEditorial.SelectedValue = libroSeleccionado.EditorialId;
             }
         }
 
@@ -82,9 +96,9 @@ namespace Biblioteca.UI.Desktop
             try
             {
                 // Validar que hay valores seleccionados
-                if (cmbAutor.SelectedValue == null || cmbGenero.SelectedValue == null)
+                if (cmbAutor.SelectedValue == null || cmbGenero.SelectedValue == null || cmbEditorial.SelectedValue == null)
                 {
-                    MessageBox.Show("Por favor seleccione un autor y un género.", "Validación", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    MessageBox.Show("Por favor seleccione un autor, género y editorial.", "Validación", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     return;
                 }
 
@@ -94,7 +108,9 @@ namespace Biblioteca.UI.Desktop
                     Titulo = txtTitulo.Text,
                     ISBN = txtISBN.Text,
                     AutorId = Convert.ToInt32(cmbAutor.SelectedValue),
-                    GeneroId = Convert.ToInt32(cmbGenero.SelectedValue)
+                    GeneroId = Convert.ToInt32(cmbGenero.SelectedValue),
+                    EditorialId = Convert.ToInt32(cmbEditorial.SelectedValue),
+                    Estado = "disponible"
                 };
 
                 _libroService.Add(libroDto);
@@ -119,9 +135,9 @@ namespace Biblioteca.UI.Desktop
             try
             {
                 // Validar que hay valores seleccionados
-                if (cmbAutor.SelectedValue == null || cmbGenero.SelectedValue == null)
+                if (cmbAutor.SelectedValue == null || cmbGenero.SelectedValue == null || cmbEditorial.SelectedValue == null)
                 {
-                    MessageBox.Show("Por favor seleccione un autor y un género.", "Validación", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    MessageBox.Show("Por favor seleccione un autor, género y editorial.", "Validación", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     return;
                 }
 
@@ -132,7 +148,9 @@ namespace Biblioteca.UI.Desktop
                     Titulo = txtTitulo.Text,
                     ISBN = txtISBN.Text,
                     AutorId = Convert.ToInt32(cmbAutor.SelectedValue),
-                    GeneroId = Convert.ToInt32(cmbGenero.SelectedValue)
+                    GeneroId = Convert.ToInt32(cmbGenero.SelectedValue),
+                    EditorialId = Convert.ToInt32(cmbEditorial.SelectedValue),
+                    Estado = libroSeleccionado.Estado
                 };
 
                 if (_libroService.Update(libroDto))
@@ -192,6 +210,8 @@ namespace Biblioteca.UI.Desktop
                 cmbAutor.SelectedIndex = 0;
             if (cmbGenero.Items.Count > 0)
                 cmbGenero.SelectedIndex = 0;
+            if (cmbEditorial.Items.Count > 0)
+                cmbEditorial.SelectedIndex = 0;
         }
 
         private void comboBox2_SelectedIndexChanged(object sender, EventArgs e)

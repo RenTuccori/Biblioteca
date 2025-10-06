@@ -4,6 +4,7 @@
 @inject LibroApiClient LibroClient
 @inject AutorApiClient AutorClient
 @inject GeneroApiClient GeneroClient
+@inject EditorialApiClient EditorialClient
 @inject IJSRuntime JSRuntime
 
 <PageTitle>Libros</PageTitle>
@@ -66,6 +67,8 @@
                                             <th>ISBN</th>
                                             <th>Autor</th>
                                             <th>Género</th>
+                                            <th>Editorial</th>
+                                            <th>Estado</th>
                                             <th class="text-center">Acciones</th>
                                         </tr>
                                     </thead>
@@ -78,6 +81,12 @@
                                                 <td>@libro.ISBN</td>
                                                 <td>@libro.AutorNombreCompleto</td>
                                                 <td>@libro.GeneroNombre</td>
+                                                <td>@libro.EditorialNombre</td>
+                                                <td>
+                                                    <span class="badge @(libro.Estado == "disponible" ? "bg-success" : "bg-warning")">
+                                                        @libro.Estado
+                                                    </span>
+                                                </td>
                                                 <td class="text-center">
                                                     <button class="btn btn-sm btn-outline-info me-1" @onclick="() => AbrirModalEditar(libro)">
                                                         <i class="fas fa-edit"></i>
@@ -163,7 +172,7 @@
                         </div>
 
                         <div class="row">
-                            <div class="col-md-6">
+                            <div class="col-md-4">
                                 <div class="mb-3">
                                     <label class="form-label">Autor *</label>
                                     <InputSelect class="form-select" @bind-Value="libroActual.AutorId">
@@ -179,7 +188,7 @@
                                     <ValidationMessage For="@(() => libroActual.AutorId)" class="text-danger" />
                                 </div>
                             </div>
-                            <div class="col-md-6">
+                            <div class="col-md-4">
                                 <div class="mb-3">
                                     <label class="form-label">Género *</label>
                                     <InputSelect class="form-select" @bind-Value="libroActual.GeneroId">
@@ -193,6 +202,22 @@
                                         }
                                     </InputSelect>
                                     <ValidationMessage For="@(() => libroActual.GeneroId)" class="text-danger" />
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label class="form-label">Editorial *</label>
+                                    <InputSelect class="form-select" @bind-Value="libroActual.EditorialId">
+                                        <option value="0">Seleccionar editorial...</option>
+                                        @if (editoriales != null)
+                                        {
+                                            @foreach (var editorial in editoriales)
+                                            {
+                                                <option value="@editorial.Id">@editorial.Nombre</option>
+                                            }
+                                        }
+                                    </InputSelect>
+                                    <ValidationMessage For="@(() => libroActual.EditorialId)" class="text-danger" />
                                 </div>
                             </div>
                         </div>
@@ -218,6 +243,7 @@
     private List<LibroDto>? libros;
     private List<AutorDto>? autores;
     private List<GeneroDto>? generos;
+    private List<EditorialDto>? editoriales;
     private LibroDto libroActual = new();
     private bool showModal = false;
     private bool isLoading = true;
@@ -242,7 +268,8 @@
             {
                 CargarLibros(),
                 CargarAutores(),
-                CargarGeneros()
+                CargarGeneros(),
+                CargarEditoriales()
             };
             
             await Task.WhenAll(tasks);
@@ -270,6 +297,11 @@
     private async Task CargarGeneros()
     {
         generos = (await GeneroClient.GetAllAsync()).ToList();
+    }
+
+    private async Task CargarEditoriales()
+    {
+        editoriales = (await EditorialClient.GetAllAsync()).ToList();
     }
 
     private async Task BuscarLibros()
@@ -308,12 +340,13 @@
 
     private async Task AbrirModalAgregar()
     {
-        libroActual = new LibroDto { Id = 0, Titulo = string.Empty, ISBN = string.Empty };
+        libroActual = new LibroDto { Id = 0, Titulo = string.Empty, ISBN = string.Empty, Estado = "disponible" };
         
-        if (autores == null || generos == null)
+        if (autores == null || generos == null || editoriales == null)
         {
             await CargarAutores();
             await CargarGeneros();
+            await CargarEditoriales();
         }
         
         showModal = true;
@@ -327,13 +360,16 @@
             Titulo = libro.Titulo, 
             ISBN = libro.ISBN,
             AutorId = libro.AutorId,
-            GeneroId = libro.GeneroId
+            GeneroId = libro.GeneroId,
+            EditorialId = libro.EditorialId,
+            Estado = libro.Estado
         };
         
-        if (autores == null || generos == null)
+        if (autores == null || generos == null || editoriales == null)
         {
             await CargarAutores();
             await CargarGeneros();
+            await CargarEditoriales();
         }
         
         showModal = true;
@@ -359,7 +395,9 @@
                     Titulo = libroActual.Titulo, 
                     ISBN = libroActual.ISBN,
                     AutorId = libroActual.AutorId,
-                    GeneroId = libroActual.GeneroId
+                    GeneroId = libroActual.GeneroId,
+                    EditorialId = libroActual.EditorialId,
+                    Estado = libroActual.Estado
                 };
                 await LibroClient.CreateAsync(crearDto);
                 successMessage = "Libro creado exitosamente";

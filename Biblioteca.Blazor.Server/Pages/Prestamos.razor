@@ -1,0 +1,422 @@
+@page "/prestamos"
+@using Biblioteca.API.Clients
+@using Biblioteca.DTOs
+@inject PrestamoApiClient PrestamoClient
+@inject LibroApiClient LibroClient
+@inject UsuarioApiClient UsuarioClient
+@inject IJSRuntime JSRuntime
+
+<PageTitle>Préstamos</PageTitle>
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2><i class="fas fa-handshake"></i> Gestión de Préstamos</h2>
+                <button class="btn btn-info" @onclick="AbrirModalAgregar">
+                    <i class="fas fa-plus"></i> Nuevo Préstamo
+                </button>
+            </div>
+        </div>
+    </div>
+
+    @if (isLoading)
+    {
+        <div class="text-center">
+            <div class="spinner-border text-info" role="status">
+                <span class="visually-hidden">Cargando...</span>
+            </div>
+        </div>
+    }
+    else if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <div class="alert alert-danger" role="alert">
+            <i class="fas fa-exclamation-triangle"></i> @errorMessage
+        </div>
+    }
+    else
+    {
+        <div class="row mb-3">
+            <div class="col-12">
+                <div class="btn-group" role="group">
+                    <button type="button" class="btn @(filtroActual == "todos" ? "btn-info" : "btn-outline-info")" @onclick='() => CambiarFiltro("todos")'>
+                        <i class="fas fa-list"></i> Todos
+                    </button>
+                    <button type="button" class="btn @(filtroActual == "activos" ? "btn-info" : "btn-outline-info")" @onclick='() => CambiarFiltro("activos")'>
+                        <i class="fas fa-book-reader"></i> Activos
+                    </button>
+                    <button type="button" class="btn @(filtroActual == "vencidos" ? "btn-danger" : "btn-outline-danger")" @onclick='() => CambiarFiltro("vencidos")'>
+                        <i class="fas fa-exclamation-triangle"></i> Vencidos
+                    </button>
+                </div>
+                <span class="ms-3 text-muted">
+                    <strong>@prestamos?.Count()</strong> préstamo(s) @filtroActual
+                </span>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-body p-0">
+                        @if (prestamos?.Any() == true)
+                        {
+                            <div class="table-responsive">
+                                <table class="table table-hover mb-0">
+                                    <thead class="table-dark">
+                                        <tr>
+                                            <th>ID</th>
+                                            <th>Libro</th>
+                                            <th>Socio</th>
+                                            <th>Fecha Préstamo</th>
+                                            <th>Devolución Prevista</th>
+                                            <th>Devolución Real</th>
+                                            <th>Estado</th>
+                                            <th class="text-center">Acciones</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var prestamo in prestamos)
+                                        {
+                                            var esVencido = !prestamo.FechaDevolucionReal.HasValue && prestamo.FechaDevolucionPrevista < DateTime.Now;
+                                            <tr class="@(esVencido ? "table-danger" : "")">
+                                                <td>@prestamo.Id</td>
+                                                <td>@prestamo.LibroTitulo</td>
+                                                <td>@prestamo.SocioNombreCompleto</td>
+                                                <td>@prestamo.FechaPrestamo.ToString("dd/MM/yyyy")</td>
+                                                <td>@prestamo.FechaDevolucionPrevista.ToString("dd/MM/yyyy")</td>
+                                                <td>
+                                                    @if (prestamo.FechaDevolucionReal.HasValue)
+                                                    {
+                                                        <span class="text-success">
+                                                            @prestamo.FechaDevolucionReal.Value.ToString("dd/MM/yyyy")
+                                                        </span>
+                                                    }
+                                                    else
+                                                    {
+                                                        <span class="text-muted">Pendiente</span>
+                                                    }
+                                                </td>
+                                                <td>
+                                                    @if (prestamo.FechaDevolucionReal.HasValue)
+                                                    {
+                                                        <span class="badge bg-success">Devuelto</span>
+                                                    }
+                                                    else if (esVencido)
+                                                    {
+                                                        <span class="badge bg-danger">Vencido</span>
+                                                    }
+                                                    else
+                                                    {
+                                                        <span class="badge bg-warning">Activo</span>
+                                                    }
+                                                </td>
+                                                <td class="text-center">
+                                                    @if (!prestamo.FechaDevolucionReal.HasValue)
+                                                    {
+                                                        <button class="btn btn-sm btn-success me-1" @onclick="() => DevolverLibro(prestamo.Id)" title="Devolver">
+                                                            <i class="fas fa-check"></i>
+                                                        </button>
+                                                    }
+                                                    <button class="btn btn-sm btn-outline-info me-1" @onclick="() => AbrirModalEditar(prestamo)">
+                                                        <i class="fas fa-edit"></i>
+                                                    </button>
+                                                    <button class="btn btn-sm btn-outline-danger" @onclick="() => EliminarPrestamo(prestamo.Id)">
+                                                        <i class="fas fa-trash"></i>
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="text-center p-4">
+                                <i class="fas fa-handshake fa-3x text-muted mb-3"></i>
+                                <p class="text-muted">No hay préstamos para mostrar</p>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    @if (!string.IsNullOrEmpty(successMessage))
+    {
+        <div class="position-fixed top-0 end-0 p-3" style="z-index: 1050">
+            <div class="toast show" role="alert">
+                <div class="toast-header bg-info text-white">
+                    <i class="fas fa-check-circle me-2"></i>
+                    <strong class="me-auto">Éxito</strong>
+                    <button type="button" class="btn-close btn-close-white" @onclick="() => successMessage = string.Empty"></button>
+                </div>
+                <div class="toast-body">
+                    @successMessage
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+<!-- Modal para Agregar/Editar Préstamo -->
+@if (showModal)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        @if (prestamoActual?.Id == 0)
+                        {
+                            <i class="fas fa-plus"></i> <text>Nuevo Préstamo</text>
+                        }
+                        else
+                        {
+                            <i class="fas fa-edit"></i> <text>Editar Préstamo</text>
+                        }
+                    </h5>
+                    <button type="button" class="btn-close" @onclick="CerrarModal"></button>
+                </div>
+                <div class="modal-body">
+                    <EditForm Model="prestamoActual" OnValidSubmit="GuardarPrestamo">
+                        <DataAnnotationsValidator />
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Libro *</label>
+                                    <InputSelect class="form-select" @bind-Value="prestamoActual.LibroId">
+                                        <option value="0">Seleccionar libro...</option>
+                                        @if (librosDisponibles != null)
+                                        {
+                                            @foreach (var libro in librosDisponibles)
+                                            {
+                                                <option value="@libro.Id">@libro.Titulo - @libro.AutorNombreCompleto</option>
+                                            }
+                                        }
+                                    </InputSelect>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Socio *</label>
+                                    <InputSelect class="form-select" @bind-Value="prestamoActual.SocioId">
+                                        <option value="0">Seleccionar socio...</option>
+                                        @if (socios != null)
+                                        {
+                                            @foreach (var socio in socios)
+                                            {
+                                                <option value="@socio.Id">@socio.NombreUsuario - @socio.PersonaNombreCompleto</option>
+                                            }
+                                        }
+                                    </InputSelect>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Fecha Préstamo *</label>
+                                    <InputDate class="form-control" @bind-Value="prestamoActual.FechaPrestamo" />
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Fecha Devolución Prevista *</label>
+                                    <InputDate class="form-control" @bind-Value="prestamoActual.FechaDevolucionPrevista" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="modal-footer px-0 pb-0">
+                            <button type="button" class="btn btn-secondary" @onclick="CerrarModal">Cancelar</button>
+                            <button type="submit" class="btn btn-info" disabled="@isProcessing">
+                                @if (isProcessing)
+                                {
+                                    <span class="spinner-border spinner-border-sm me-2"></span>
+                                }
+                                Guardar
+                            </button>
+                        </div>
+                    </EditForm>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private List<PrestamoDto>? prestamos;
+    private List<LibroDto>? librosDisponibles;
+    private List<UsuarioDto>? socios;
+    private PrestamoDto prestamoActual = new();
+    private bool showModal = false;
+    private bool isLoading = true;
+    private bool isProcessing = false;
+    private string errorMessage = string.Empty;
+    private string successMessage = string.Empty;
+    private string filtroActual = "todos";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CargarDatos();
+    }
+
+    private async Task CargarDatos()
+    {
+        try
+        {
+            isLoading = true;
+            errorMessage = string.Empty;
+            
+            await CargarPrestamos();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error al cargar datos: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task CargarPrestamos()
+    {
+        switch (filtroActual)
+        {
+            case "activos":
+                prestamos = (await PrestamoClient.GetActivosAsync()).ToList();
+                break;
+            case "vencidos":
+                prestamos = (await PrestamoClient.GetVencidosAsync()).ToList();
+                break;
+            default:
+                prestamos = (await PrestamoClient.GetAllAsync()).ToList();
+                break;
+        }
+    }
+
+    private async Task CambiarFiltro(string filtro)
+    {
+        filtroActual = filtro;
+        await CargarPrestamos();
+    }
+
+    private async Task AbrirModalAgregar()
+    {
+        prestamoActual = new PrestamoDto 
+        { 
+            Id = 0, 
+            FechaPrestamo = DateTime.Now,
+            FechaDevolucionPrevista = DateTime.Now.AddDays(15)
+        };
+        
+        // Cargar libros disponibles y socios
+        librosDisponibles = (await LibroClient.GetAllAsync()).Where(l => l.Estado == "disponible").ToList();
+        socios = (await UsuarioClient.GetByRolAsync("socio")).ToList();
+        
+        showModal = true;
+    }
+
+    private async Task AbrirModalEditar(PrestamoDto prestamo)
+    {
+        prestamoActual = new PrestamoDto 
+        { 
+            Id = prestamo.Id, 
+            LibroId = prestamo.LibroId,
+            SocioId = prestamo.SocioId,
+            FechaPrestamo = prestamo.FechaPrestamo,
+            FechaDevolucionPrevista = prestamo.FechaDevolucionPrevista,
+            FechaDevolucionReal = prestamo.FechaDevolucionReal
+        };
+        
+        // Cargar libros y socios
+        librosDisponibles = (await LibroClient.GetAllAsync()).ToList();
+        socios = (await UsuarioClient.GetByRolAsync("socio")).ToList();
+        
+        showModal = true;
+    }
+
+    private void CerrarModal()
+    {
+        showModal = false;
+        prestamoActual = new();
+    }
+
+    private async Task GuardarPrestamo()
+    {
+        try
+        {
+            isProcessing = true;
+            errorMessage = string.Empty;
+
+            if (prestamoActual.Id == 0)
+            {
+                var crearDto = new CrearPrestamoDto 
+                { 
+                    LibroId = prestamoActual.LibroId,
+                    SocioId = prestamoActual.SocioId,
+                    FechaPrestamo = prestamoActual.FechaPrestamo,
+                    FechaDevolucionPrevista = prestamoActual.FechaDevolucionPrevista
+                };
+                await PrestamoClient.CreateAsync(crearDto);
+                successMessage = "Préstamo creado exitosamente. El libro ahora está prestado.";
+            }
+            else
+            {
+                await PrestamoClient.UpdateAsync(prestamoActual);
+                successMessage = "Préstamo actualizado exitosamente";
+            }
+
+            CerrarModal();
+            await CargarPrestamos();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error al guardar préstamo: {ex.Message}";
+        }
+        finally
+        {
+            isProcessing = false;
+        }
+    }
+
+    private async Task DevolverLibro(int prestamoId)
+    {
+        var confirmed = await JSRuntime.InvokeAsync<bool>("confirm", "¿Confirma la devolución de este libro?");
+        if (!confirmed) return;
+
+        try
+        {
+            await PrestamoClient.DevolverAsync(prestamoId, DateTime.Now);
+            successMessage = "Libro devuelto exitosamente. El libro ahora está disponible.";
+            await CargarPrestamos();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error al devolver libro: {ex.Message}";
+        }
+    }
+
+    private async Task EliminarPrestamo(int id)
+    {
+        var confirmed = await JSRuntime.InvokeAsync<bool>("confirm", "¿Está seguro de que desea eliminar este préstamo?");
+        if (!confirmed) return;
+
+        try
+        {
+            await PrestamoClient.DeleteAsync(id);
+            successMessage = "Préstamo eliminado exitosamente";
+            await CargarPrestamos();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error al eliminar préstamo: {ex.Message}";
+        }
+    }
+}

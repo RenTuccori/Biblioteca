@@ -31,6 +31,7 @@ namespace Biblioteca.Data
             var libroEntity = _context.Libros
                 .Include(l => l.Autor)
                 .Include(l => l.Genero)
+                .Include(l => l.Editorial)
                 .FirstOrDefault(l => l.Id == id);
 
             return libroEntity?.ToLibro();
@@ -41,6 +42,7 @@ namespace Biblioteca.Data
             return _context.Libros
                 .Include(l => l.Autor)
                 .Include(l => l.Genero)
+                .Include(l => l.Editorial)
                 .OrderBy(l => l.Titulo)
                 .ToList()
                 .Select(l => l.ToLibro());
@@ -64,6 +66,8 @@ namespace Biblioteca.Data
             existing.ISBN = libro.ISBN;
             existing.AutorId = libro.AutorId;
             existing.GeneroId = libro.GeneroId;
+            existing.EditorialId = libro.EditorialId;
+            existing.Estado = libro.Estado;
 
             return true;
         }
@@ -73,6 +77,11 @@ namespace Biblioteca.Data
             var libro = _context.Libros.Find(id);
             if (libro == null)
                 return false;
+
+            // Verificar si el libro tiene préstamos asociados
+            var tienePrestamos = _context.Prestamos.Any(p => p.LibroId == id);
+            if (tienePrestamos)
+                throw new InvalidOperationException("No se puede eliminar el libro porque tiene préstamos asociados.");
 
             _context.Libros.Remove(libro);
             return true;
@@ -98,15 +107,16 @@ namespace Biblioteca.Data
             if (string.IsNullOrWhiteSpace(criterio))
                 return GetAll();
 
-            // Usar LINQ en lugar de SQL raw para mejor compatibilidad
             return _context.Libros
                 .Include(l => l.Autor)
                 .Include(l => l.Genero)
+                .Include(l => l.Editorial)
                 .Where(l => l.Titulo.Contains(criterio) ||
                            l.ISBN.Contains(criterio) ||
                            l.Autor!.Nombre.Contains(criterio) ||
                            l.Autor!.Apellido.Contains(criterio) ||
-                           l.Genero!.Nombre.Contains(criterio))
+                           l.Genero!.Nombre.Contains(criterio) ||
+                           l.Editorial!.Nombre.Contains(criterio))
                 .OrderBy(l => l.Titulo)
                 .ToList()
                 .Select(l => l.ToLibro());
@@ -117,6 +127,7 @@ namespace Biblioteca.Data
             return _context.Libros
                 .Include(l => l.Autor)
                 .Include(l => l.Genero)
+                .Include(l => l.Editorial)
                 .Where(l => l.AutorId == autorId)
                 .OrderBy(l => l.Titulo)
                 .ToList()
@@ -128,7 +139,32 @@ namespace Biblioteca.Data
             return _context.Libros
                 .Include(l => l.Autor)
                 .Include(l => l.Genero)
+                .Include(l => l.Editorial)
                 .Where(l => l.GeneroId == generoId)
+                .OrderBy(l => l.Titulo)
+                .ToList()
+                .Select(l => l.ToLibro());
+        }
+
+        public IEnumerable<Libro> GetByEditorial(int editorialId)
+        {
+            return _context.Libros
+                .Include(l => l.Autor)
+                .Include(l => l.Genero)
+                .Include(l => l.Editorial)
+                .Where(l => l.EditorialId == editorialId)
+                .OrderBy(l => l.Titulo)
+                .ToList()
+                .Select(l => l.ToLibro());
+        }
+
+        public IEnumerable<Libro> GetByEstado(string estado)
+        {
+            return _context.Libros
+                .Include(l => l.Autor)
+                .Include(l => l.Genero)
+                .Include(l => l.Editorial)
+                .Where(l => l.Estado == estado)
                 .OrderBy(l => l.Titulo)
                 .ToList()
                 .Select(l => l.ToLibro());
