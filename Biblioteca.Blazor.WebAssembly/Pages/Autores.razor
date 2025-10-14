@@ -1,0 +1,313 @@
+@page "/autores"
+@using Biblioteca.API.Clients
+@using Biblioteca.DTOs
+@inject AutorApiClient AutorClient
+@inject IJSRuntime JSRuntime
+
+<PageTitle>Autores</PageTitle>
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2><i class="fas fa-user-edit"></i> Gestión de Autores</h2>
+                <button class="btn btn-primary" @onclick="AbrirModalAgregar">
+                    <i class="fas fa-plus"></i> Nuevo Autor
+                </button>
+            </div>
+        </div>
+    </div>
+
+    @if (isLoading)
+    {
+        <div class="text-center">
+            <div class="spinner-border" role="status">
+                <span class="visually-hidden">Cargando...</span>
+            </div>
+        </div>
+    }
+    else if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <div class="alert alert-danger" role="alert">
+            <i class="fas fa-exclamation-triangle"></i> @errorMessage
+        </div>
+    }
+    else
+    {
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h5 class="mb-0">Lista de Autores</h5>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="input-group">
+                                    <input type="text" class="form-control" placeholder="Buscar autor..." @bind="searchText" @onkeypress="OnSearchKeyPress" />
+                                    <button class="btn btn-outline-secondary" @onclick="BuscarAutores">
+                                        <i class="fas fa-search"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body p-0">
+                        @if (autores?.Any() == true)
+                        {
+                            <div class="table-responsive">
+                                <table class="table table-hover mb-0">
+                                    <thead class="table-dark">
+                                        <tr>
+                                            <th>ID</th>
+                                            <th>Nombre</th>
+                                            <th>Apellido</th>
+                                            <th class="text-center">Acciones</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var autor in autores)
+                                        {
+                                            <tr>
+                                                <td>@autor.Id</td>
+                                                <td>@(autor.Nombre ?? string.Empty)</td>
+                                                <td>@(autor.Apellido ?? string.Empty)</td>
+                                                <td class="text-center">
+                                                    <button class="btn btn-sm btn-outline-primary me-1" @onclick="() => AbrirModalEditar(autor)">
+                                                        <i class="fas fa-edit"></i>
+                                                    </button>
+                                                    <button class="btn btn-sm btn-outline-danger" @onclick="() => EliminarAutor(autor.Id)">
+                                                        <i class="fas fa-trash"></i>
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="text-center p-4">
+                                <i class="fas fa-user-slash fa-3x text-muted mb-3"></i>
+                                <p class="text-muted">No hay autores para mostrar</p>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    @if (!string.IsNullOrEmpty(successMessage))
+    {
+        <div class="position-fixed top-0 end-0 p-3" style="z-index: 1050">
+            <div class="toast show" role="alert">
+                <div class="toast-header bg-success text-white">
+                    <i class="fas fa-check-circle me-2"></i>
+                    <strong class="me-auto">Éxito</strong>
+                    <button type="button" class="btn-close btn-close-white" @onclick="() => successMessage = string.Empty"></button>
+                </div>
+                <div class="toast-body">
+                    @successMessage
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+<!-- Modal para Agregar/Editar Autor -->
+@if (showModal)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        @if (autorActual?.Id == 0)
+                        {
+                            <i class="fas fa-plus"></i> <text>Nuevo Autor</text>
+                        }
+                        else
+                        {
+                            <i class="fas fa-edit"></i> <text>Editar Autor</text>
+                        }
+                    </h5>
+                    <button type="button" class="btn-close" @onclick="CerrarModal"></button>
+                </div>
+                <div class="modal-body">
+                    <EditForm Model="autorActual" OnValidSubmit="GuardarAutor">
+                        <DataAnnotationsValidator />
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Nombre *</label>
+                            <InputText class="form-control" @bind-Value="autorActual.Nombre" />
+                            <ValidationMessage For="@(() => autorActual.Nombre)" class="text-danger" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Apellido *</label>
+                            <InputText class="form-control" @bind-Value="autorActual.Apellido" />
+                            <ValidationMessage For="@(() => autorActual.Apellido)" class="text-danger" />
+                        </div>
+
+                        <div class="modal-footer px-0 pb-0">
+                            <button type="button" class="btn btn-secondary" @onclick="CerrarModal">Cancelar</button>
+                            <button type="submit" class="btn btn-primary" disabled="@isProcessing">
+                                @if (isProcessing)
+                                {
+                                    <span class="spinner-border spinner-border-sm me-2"></span>
+                                }
+                                Guardar
+                            </button>
+                        </div>
+                    </EditForm>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private List<AutorDto>? autores;
+    private AutorDto autorActual = new();
+    private bool showModal = false;
+    private bool isLoading = true;
+    private bool isProcessing = false;
+    private string errorMessage = string.Empty;
+    private string successMessage = string.Empty;
+    private string searchText = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CargarAutores();
+    }
+
+    private async Task CargarAutores()
+    {
+        try
+        {
+            isLoading = true;
+            errorMessage = string.Empty;
+            autores = (await AutorClient.GetAllAsync()).ToList();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error al cargar autores: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task BuscarAutores()
+    {
+        try
+        {
+            isLoading = true;
+            errorMessage = string.Empty;
+            
+            if (string.IsNullOrWhiteSpace(searchText))
+            {
+                autores = (await AutorClient.GetAllAsync()).ToList();
+            }
+            else
+            {
+                autores = (await AutorClient.GetByCriteriaAsync(searchText)).ToList();
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error al buscar autores: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task OnSearchKeyPress(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            await BuscarAutores();
+        }
+    }
+
+    private void AbrirModalAgregar()
+    {
+        autorActual = new AutorDto { Id = 0, Nombre = string.Empty, Apellido = string.Empty };
+        showModal = true;
+    }
+
+    private void AbrirModalEditar(AutorDto autor)
+    {
+        autorActual = new AutorDto 
+        { 
+            Id = autor.Id, 
+            Nombre = autor.Nombre, 
+            Apellido = autor.Apellido
+        };
+        showModal = true;
+    }
+
+    private void CerrarModal()
+    {
+        showModal = false;
+        autorActual = new();
+    }
+
+    private async Task GuardarAutor()
+    {
+        try
+        {
+            isProcessing = true;
+            errorMessage = string.Empty;
+
+            if (autorActual.Id == 0)
+            {
+                var crearDto = new CrearAutorDto 
+                { 
+                    Nombre = autorActual.Nombre, 
+                    Apellido = autorActual.Apellido
+                };
+                await AutorClient.CreateAsync(crearDto);
+                successMessage = "Autor creado exitosamente";
+            }
+            else
+            {
+                await AutorClient.UpdateAsync(autorActual);
+                successMessage = "Autor actualizado exitosamente";
+            }
+
+            CerrarModal();
+            await CargarAutores();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error al guardar autor: {ex.Message}";
+        }
+        finally
+        {
+            isProcessing = false;
+        }
+    }
+
+    private async Task EliminarAutor(int id)
+    {
+        var confirmed = await JSRuntime.InvokeAsync<bool>("confirm", "¿Está seguro de que desea eliminar este autor?");
+        if (!confirmed) return;
+
+        try
+        {
+            await AutorClient.DeleteAsync(id);
+            successMessage = "Autor eliminado exitosamente";
+            await CargarAutores();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error al eliminar autor: {ex.Message}";
+        }
+    }
+}
