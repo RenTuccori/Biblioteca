@@ -142,12 +142,14 @@ namespace Biblioteca.UI.Desktop
                 if (string.IsNullOrWhiteSpace(txtBuscar.Text))
                 {
                     await CargarAutores();
+                    LimpiarCampos();
                 }
                 else
                 {
                     _autores = (await _autorApiClient.GetByCriteriaAsync(txtBuscar.Text.Trim())).ToList();
                     dgvAutores.DataSource = null;
                     dgvAutores.DataSource = _autores;
+                    dgvAutores.ClearSelection();
                 }
             }
             catch (Exception ex)
@@ -170,6 +172,12 @@ namespace Biblioteca.UI.Desktop
                     dgvAutores.Columns["Nombre"].HeaderText = "Nombre";
                     dgvAutores.Columns["Apellido"].HeaderText = "Apellido";
                 }
+                
+                // Limpiar la selección para que no se cargue automáticamente el primer elemento
+                dgvAutores.ClearSelection();
+
+                // Dejar campos vacíos al iniciar/cargar
+                LimpiarCampos();
             }
             catch (Exception ex)
             {
@@ -182,6 +190,7 @@ namespace Biblioteca.UI.Desktop
             txtNombreAutor.Clear();
             txtApellidoAutor.Clear();
             txtBuscar.Clear();
+            dgvAutores.ClearSelection();
         }
     }
 }

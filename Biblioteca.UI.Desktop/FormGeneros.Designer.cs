@@ -72,9 +72,9 @@
             this.lblTitulo.ForeColor = Color.White;
             this.lblTitulo.Location = new Point(20, 15);
             this.lblTitulo.Name = "lblTitulo";
-            this.lblTitulo.Size = new Size(229, 30);
+            this.lblTitulo.Size = new Size(210, 30);
             this.lblTitulo.TabIndex = 0;
-            this.lblTitulo.Text = "📚 Gestión de Géneros";
+            this.lblTitulo.Text = "Gestión de Géneros";
             // 
             // tableLayoutInputs
             // 
@@ -140,7 +140,7 @@
             this.btnAgregar.Name = "btnAgregar";
             this.btnAgregar.Size = new Size(100, 30);
             this.btnAgregar.TabIndex = 0;
-            this.btnAgregar.Text = "➕ Agregar";
+            this.btnAgregar.Text = "+ Agregar";
             this.btnAgregar.UseVisualStyleBackColor = false;
             this.btnAgregar.Click += new EventHandler(this.btnAgregar_Click);
             // 
@@ -155,7 +155,7 @@
             this.btnModificar.Name = "btnModificar";
             this.btnModificar.Size = new Size(100, 30);
             this.btnModificar.TabIndex = 1;
-            this.btnModificar.Text = "✏️ Modificar";
+            this.btnModificar.Text = "Modificar";
             this.btnModificar.UseVisualStyleBackColor = false;
             this.btnModificar.Click += new EventHandler(this.btnModificar_Click);
             // 
@@ -170,7 +170,7 @@
             this.btnEliminar.Name = "btnEliminar";
             this.btnEliminar.Size = new Size(100, 30);
             this.btnEliminar.TabIndex = 2;
-            this.btnEliminar.Text = "🗑️ Eliminar";
+            this.btnEliminar.Text = "- Eliminar";
             this.btnEliminar.UseVisualStyleBackColor = false;
             this.btnEliminar.Click += new EventHandler(this.btnEliminar_Click);
             // 
@@ -213,7 +213,7 @@
             this.MinimumSize = new Size(800, 500);
             this.Name = "FormGeneros";
             this.StartPosition = FormStartPosition.CenterScreen;
-            this.Text = "📚 Gestión de Géneros - Biblioteca";
+            this.Text = "Gestión de Géneros - Biblioteca";
             this.WindowState = FormWindowState.Maximized;
             this.Load += new EventHandler(this.FormGenero_Load);
             this.tableLayoutPrincipal.ResumeLayout(false);

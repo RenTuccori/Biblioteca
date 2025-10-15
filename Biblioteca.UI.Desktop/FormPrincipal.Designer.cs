@@ -70,7 +70,7 @@
             this.lblTitulo.Name = "lblTitulo";
             this.lblTitulo.Size = new Size(370, 32);
             this.lblTitulo.TabIndex = 0;
-            this.lblTitulo.Text = "📚 Sistema de Gestión de Biblioteca";
+            this.lblTitulo.Text = "Sistema de Gestión de Biblioteca";
             this.lblTitulo.TextAlign = ContentAlignment.MiddleCenter;
             // 
             // tableLayoutButtons
@@ -110,7 +110,7 @@
             this.btnGestionarGeneros.Name = "btnGestionarGeneros";
             this.btnGestionarGeneros.Size = new Size(200, 50);
             this.btnGestionarGeneros.TabIndex = 0;
-            this.btnGestionarGeneros.Text = "📚 Gestionar Géneros";
+            this.btnGestionarGeneros.Text = "Gestionar Géneros";
             this.btnGestionarGeneros.UseVisualStyleBackColor = false;
             this.btnGestionarGeneros.Click += btnGestionarGeneros_Click;
             // 
@@ -129,7 +129,7 @@
             this.btnGestionarAutores.Name = "btnGestionarAutores";
             this.btnGestionarAutores.Size = new Size(200, 50);
             this.btnGestionarAutores.TabIndex = 1;
-            this.btnGestionarAutores.Text = "✍️ Gestionar Autores";
+            this.btnGestionarAutores.Text = "Gestionar Autores";
             this.btnGestionarAutores.UseVisualStyleBackColor = false;
             this.btnGestionarAutores.Click += btnGestionarAutores_Click;
             // 
@@ -148,7 +148,7 @@
             this.btnGestionarLibros.Name = "btnGestionarLibros";
             this.btnGestionarLibros.Size = new Size(200, 50);
             this.btnGestionarLibros.TabIndex = 2;
-            this.btnGestionarLibros.Text = "📖 Gestionar Libros";
+            this.btnGestionarLibros.Text = "Gestionar Libros";
             this.btnGestionarLibros.UseVisualStyleBackColor = false;
             this.btnGestionarLibros.Click += btnGestionarLibros_Click;
             // 
@@ -167,7 +167,7 @@
             this.btnGestionarEditoriales.Name = "btnGestionarEditoriales";
             this.btnGestionarEditoriales.Size = new Size(200, 50);
             this.btnGestionarEditoriales.TabIndex = 3;
-            this.btnGestionarEditoriales.Text = "🏢 Gestionar Editoriales";
+            this.btnGestionarEditoriales.Text = "Gestionar Editoriales";
             this.btnGestionarEditoriales.UseVisualStyleBackColor = false;
             this.btnGestionarEditoriales.Click += btnGestionarEditoriales_Click;
             // 
@@ -186,7 +186,7 @@
             this.btnGestionarUsuarios.Name = "btnGestionarUsuarios";
             this.btnGestionarUsuarios.Size = new Size(200, 50);
             this.btnGestionarUsuarios.TabIndex = 4;
-            this.btnGestionarUsuarios.Text = "👥 Gestionar Usuarios";
+            this.btnGestionarUsuarios.Text = "Gestionar Usuarios";
             this.btnGestionarUsuarios.UseVisualStyleBackColor = false;
             this.btnGestionarUsuarios.Click += btnGestionarUsuarios_Click;
             // 
@@ -205,7 +205,7 @@
             this.btnGestionarPrestamos.Name = "btnGestionarPrestamos";
             this.btnGestionarPrestamos.Size = new Size(200, 50);
             this.btnGestionarPrestamos.TabIndex = 5;
-            this.btnGestionarPrestamos.Text = "🤝 Gestionar Préstamos";
+            this.btnGestionarPrestamos.Text = "Gestionar Préstamos";
             this.btnGestionarPrestamos.UseVisualStyleBackColor = false;
             this.btnGestionarPrestamos.Click += btnGestionarPrestamos_Click;
             // 
@@ -219,7 +219,7 @@
             this.MinimumSize = new Size(500, 350);
             this.Name = "FormPrincipal";
             this.StartPosition = FormStartPosition.CenterScreen;
-            this.Text = "📚 Biblioteca - Sistema de Gestión";
+            this.Text = "Biblioteca - Sistema de Gestión";
             this.tableLayoutMain.ResumeLayout(false);
             this.tableLayoutMain.PerformLayout();
             this.tableLayoutButtons.ResumeLayout(false);

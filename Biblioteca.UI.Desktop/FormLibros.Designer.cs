@@ -91,9 +91,9 @@
             this.lblTitulo.ForeColor = Color.White;
             this.lblTitulo.Location = new Point(20, 15);
             this.lblTitulo.Name = "lblTitulo";
-            this.lblTitulo.Size = new Size(213, 30);
+            this.lblTitulo.Size = new Size(197, 30);
             this.lblTitulo.TabIndex = 0;
-            this.lblTitulo.Text = "📖 Gestión de Libros";
+            this.lblTitulo.Text = "Gestión de Libros";
             // 
             // tableLayoutInputs
             // 
@@ -256,7 +256,7 @@
             this.btnAgregar.Name = "btnAgregar";
             this.btnAgregar.Size = new Size(100, 30);
             this.btnAgregar.TabIndex = 0;
-            this.btnAgregar.Text = "➕ Agregar";
+            this.btnAgregar.Text = "+ Agregar";
             this.btnAgregar.UseVisualStyleBackColor = false;
             this.btnAgregar.Click += new EventHandler(this.btnAgregar_Click);
             // 
@@ -271,7 +271,7 @@
             this.btnModificar.Name = "btnModificar";
             this.btnModificar.Size = new Size(100, 30);
             this.btnModificar.TabIndex = 1;
-            this.btnModificar.Text = "✏️ Modificar";
+            this.btnModificar.Text = "Modificar";
             this.btnModificar.UseVisualStyleBackColor = false;
             this.btnModificar.Click += new EventHandler(this.btnModificar_Click);
             // 
@@ -286,7 +286,7 @@
             this.BtnEliminar.Name = "BtnEliminar";
             this.BtnEliminar.Size = new Size(100, 30);
             this.BtnEliminar.TabIndex = 2;
-            this.BtnEliminar.Text = "🗑️ Eliminar";
+            this.BtnEliminar.Text = "- Eliminar";
             this.BtnEliminar.UseVisualStyleBackColor = false;
             this.BtnEliminar.Click += new EventHandler(this.btnEliminar_Click);
             // 
@@ -329,7 +329,7 @@
             this.MinimumSize = new Size(800, 500);
             this.Name = "FormLibros";
             this.StartPosition = FormStartPosition.CenterScreen;
-            this.Text = "📖 Gestión de Libros - Biblioteca";
+            this.Text = "Gestión de Libros - Biblioteca";
             this.WindowState = FormWindowState.Maximized;
             this.Load += new EventHandler(this.FormLibros_Load);
             this.tableLayoutPrincipal.ResumeLayout(false);

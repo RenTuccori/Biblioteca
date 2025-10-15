@@ -79,7 +79,7 @@
             this.lblTitulo.Name = "lblTitulo";
             this.lblTitulo.Size = new Size(229, 30);
             this.lblTitulo.TabIndex = 0;
-            this.lblTitulo.Text = "✍️ Gestión de Autores";
+            this.lblTitulo.Text = "Gestión de Autores";
             // 
             // tableLayoutInputs
             // 
@@ -118,7 +118,7 @@
             this.lblBuscar.Name = "lblBuscar";
             this.lblBuscar.Size = new Size(55, 19);
             this.lblBuscar.TabIndex = 0;
-            this.lblBuscar.Text = "🔍 Buscar:";
+            this.lblBuscar.Text = "Buscar:";
             // 
             // txtBuscar
             // 
@@ -142,7 +142,7 @@
             this.btnBuscar.Name = "btnBuscar";
             this.btnBuscar.Size = new Size(75, 29);
             this.btnBuscar.TabIndex = 2;
-            this.btnBuscar.Text = "🔍 Buscar";
+            this.btnBuscar.Text = "Buscar";
             this.btnBuscar.UseVisualStyleBackColor = false;
             this.btnBuscar.Click += new EventHandler(this.btnBuscar_Click);
             // 
@@ -210,7 +210,7 @@
             this.btnAgregar.Name = "btnAgregar";
             this.btnAgregar.Size = new Size(100, 30);
             this.btnAgregar.TabIndex = 0;
-            this.btnAgregar.Text = "➕ Agregar";
+            this.btnAgregar.Text = "+ Agregar";
             this.btnAgregar.UseVisualStyleBackColor = false;
             this.btnAgregar.Click += new EventHandler(this.btnAgregar_Click);
             // 
@@ -225,7 +225,7 @@
             this.btnModificar.Name = "btnModificar";
             this.btnModificar.Size = new Size(100, 30);
             this.btnModificar.TabIndex = 1;
-            this.btnModificar.Text = "✏️ Modificar";
+            this.btnModificar.Text = "Modificar";
             this.btnModificar.UseVisualStyleBackColor = false;
             this.btnModificar.Click += new EventHandler(this.btnModificar_Click);
             // 
@@ -240,7 +240,7 @@
             this.btnEliminar.Name = "btnEliminar";
             this.btnEliminar.Size = new Size(100, 30);
             this.btnEliminar.TabIndex = 2;
-            this.btnEliminar.Text = "🗑️ Eliminar";
+            this.btnEliminar.Text = "- Eliminar";
             this.btnEliminar.UseVisualStyleBackColor = false;
             this.btnEliminar.Click += new EventHandler(this.btnEliminar_Click);
             // 
@@ -283,7 +283,7 @@
             this.MinimumSize = new Size(800, 500);
             this.Name = "FormAutores";
             this.StartPosition = FormStartPosition.CenterScreen;
-            this.Text = "✍️ Gestión de Autores - Biblioteca";
+            this.Text = "Gestión de Autores - Biblioteca";
             this.WindowState = FormWindowState.Maximized;
             this.Load += new EventHandler(this.FormAutores_Load);
             this.tableLayoutPrincipal.ResumeLayout(false);

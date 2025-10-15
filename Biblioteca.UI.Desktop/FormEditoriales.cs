@@ -1,25 +1,21 @@
-using Biblioteca.Data;
-using Biblioteca.Domain.Services;
+using Biblioteca.API.Clients;
 using Biblioteca.DTOs;
 
 namespace Biblioteca.UI.Desktop
 {
     public partial class FormEditoriales : Form
     {
-        private readonly EditorialService _editorialService;
+        private readonly EditorialApiClient _editorialApiClient;
 
-        public FormEditoriales()
+        public FormEditoriales(EditorialApiClient editorialApiClient)
         {
             InitializeComponent();
-            
-            var context = DatabaseHelper.CreateDbContext();
-            var editorialRepository = new EditorialRepository(context);
-            _editorialService = new EditorialService(editorialRepository);
+            _editorialApiClient = editorialApiClient;
         }
 
-        private void FormEditoriales_Load(object sender, EventArgs e)
+        private async void FormEditoriales_Load(object sender, EventArgs e)
         {
-            CargarEditoriales();
+            await CargarEditoriales();
         }
 
         private void dgvEditoriales_SelectionChanged(object sender, EventArgs e)
@@ -31,29 +27,32 @@ namespace Biblioteca.UI.Desktop
             }
         }
 
-        private void btnAgregar_Click(object sender, EventArgs e)
+        private async void btnAgregar_Click(object sender, EventArgs e)
         {
             try
             {
+                if (string.IsNullOrWhiteSpace(txtNombreEditorial.Text))
+                {
+                    MessageBox.Show("El nombre de la editorial es requerido.", "Error de validación", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+
                 var nuevaEditorialDto = new CrearEditorialDto 
                 { 
-                    Nombre = txtNombreEditorial.Text
+                    Nombre = txtNombreEditorial.Text.Trim()
                 };
-                _editorialService.Add(nuevaEditorialDto);
-                MessageBox.Show("Editorial agregada con éxito.");
-                CargarEditoriales();
+                await _editorialApiClient.CreateAsync(nuevaEditorialDto);
+                MessageBox.Show("Editorial agregada con éxito.", "Éxito", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                await CargarEditoriales();
+                txtNombreEditorial.Clear();
             }
-            catch (ArgumentException ex)
+            catch (Exception ex)
             {
-                MessageBox.Show(ex.Message, "Error de validación", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-            catch (InvalidOperationException ex)
-            {
-                MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show($"Error al agregar editorial: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
-        private void btnModificar_Click(object sender, EventArgs e)
+        private async void btnModificar_Click(object sender, EventArgs e)
         {
             if (dgvEditoriales.SelectedRows.Count == 0)
             {
@@ -62,34 +61,38 @@ namespace Biblioteca.UI.Desktop
             }
             try
             {
+                if (string.IsNullOrWhiteSpace(txtNombreEditorial.Text))
+                {
+                    MessageBox.Show("El nombre de la editorial es requerido.", "Error de validación", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+
                 var editorialSeleccionada = (EditorialDto)dgvEditoriales.SelectedRows[0].DataBoundItem;
                 var editorialModificadaDto = new EditorialDto 
                 { 
                     Id = editorialSeleccionada.Id, 
-                    Nombre = txtNombreEditorial.Text
+                    Nombre = txtNombreEditorial.Text.Trim()
                 };
                 
-                if (_editorialService.Update(editorialModificadaDto))
+                bool resultado = await _editorialApiClient.UpdateAsync(editorialModificadaDto);
+                if (resultado)
                 {
-                    MessageBox.Show("Editorial modificada con éxito.");
-                    CargarEditoriales();
+                    MessageBox.Show("Editorial modificada con éxito.", "Éxito", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    await CargarEditoriales();
+                    txtNombreEditorial.Clear();
                 }
                 else
                 {
-                    MessageBox.Show("No se pudo encontrar la editorial para modificar.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    MessageBox.Show("No se pudo actualizar la editorial.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             }
-            catch (ArgumentException ex)
+            catch (Exception ex)
             {
-                MessageBox.Show(ex.Message, "Error de validación", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-            catch (InvalidOperationException ex)
-            {
-                MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show($"Error al modificar editorial: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
-        private void btnEliminar_Click(object sender, EventArgs e)
+        private async void btnEliminar_Click(object sender, EventArgs e)
         {
             if (dgvEditoriales.SelectedRows.Count == 0)
             {
@@ -103,31 +106,50 @@ namespace Biblioteca.UI.Desktop
                 try
                 {
                     var editorialSeleccionada = (EditorialDto)dgvEditoriales.SelectedRows[0].DataBoundItem;
-                    if (_editorialService.Delete(editorialSeleccionada.Id))
+                    bool resultado = await _editorialApiClient.DeleteAsync(editorialSeleccionada.Id);
+                    if (resultado)
                     {
-                        MessageBox.Show("Editorial eliminada con éxito.");
-                        CargarEditoriales();
+                        MessageBox.Show("Editorial eliminada con éxito.", "Éxito", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        await CargarEditoriales();
+                        txtNombreEditorial.Clear();
                     }
                     else
                     {
-                        MessageBox.Show("No se pudo encontrar la editorial para eliminar.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        MessageBox.Show("No se pudo eliminar la editorial.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     }
                 }
-                catch (InvalidOperationException ex)
+                catch (Exception ex)
                 {
-                    MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    MessageBox.Show($"Error al eliminar editorial: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             }
         }
 
-        private void CargarEditoriales()
+        private async Task CargarEditoriales()
         {
-            var editorialesDto = _editorialService.GetAll().ToList();
+            try
+            {
+                var editorialesDto = (await _editorialApiClient.GetAllAsync()).ToList();
 
-            dgvEditoriales.DataSource = null;
-            dgvEditoriales.DataSource = editorialesDto;
+                dgvEditoriales.DataSource = null;
+                dgvEditoriales.DataSource = editorialesDto;
+                
+                // Limpiar la selección para que no se cargue automáticamente el primer elemento
+                dgvEditoriales.ClearSelection();
 
+                // Dejar campo vacío al iniciar/cargar
+                LimpiarCampos();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error al cargar editoriales: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private void LimpiarCampos()
+        {
             txtNombreEditorial.Clear();
+            dgvEditoriales.ClearSelection();
         }
     }
 }

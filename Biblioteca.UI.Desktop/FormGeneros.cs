@@ -1,26 +1,21 @@
-using Biblioteca.Data;
-using Biblioteca.Domain.Services;
+using Biblioteca.API.Clients;
 using Biblioteca.DTOs;
 
 namespace Biblioteca.UI.Desktop
 {
     public partial class FormGeneros : Form
     {
-        private readonly GeneroService _generoService;
+        private readonly GeneroApiClient _generoApiClient;
 
-        public FormGeneros()
+        public FormGeneros(GeneroApiClient generoApiClient)
         {
             InitializeComponent();
-            
-            // Configurar servicios con dependencias
-            var context = DatabaseHelper.CreateDbContext();
-            var generoRepository = new GeneroRepository(context);
-            _generoService = new GeneroService(generoRepository);
+            _generoApiClient = generoApiClient;
         }
 
-        private void FormGenero_Load(object sender, EventArgs e)
+        private async void FormGenero_Load(object sender, EventArgs e)
         {
-            CargarGeneros();
+            await CargarGeneros();
         }
 
         private void dgvGeneros_SelectionChanged(object sender, EventArgs e)
@@ -36,26 +31,29 @@ namespace Biblioteca.UI.Desktop
             }
         }
 
-        private void btnAgregar_Click(object sender, EventArgs e)
+        private async void btnAgregar_Click(object sender, EventArgs e)
         {
             try
             {
-                var nuevoGeneroDto = new CrearGeneroDto { Nombre = txtNombreGenero.Text };
-                _generoService.Add(nuevoGeneroDto);
-                MessageBox.Show("Género agregado con éxito.");
-                CargarGeneros();
+                if (string.IsNullOrWhiteSpace(txtNombreGenero.Text))
+                {
+                    MessageBox.Show("El nombre del género es requerido.", "Error de validación", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+
+                var nuevoGeneroDto = new CrearGeneroDto { Nombre = txtNombreGenero.Text.Trim() };
+                await _generoApiClient.CreateAsync(nuevoGeneroDto);
+                MessageBox.Show("Género agregado con éxito.", "Éxito", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                await CargarGeneros();
+                txtNombreGenero.Clear();
             }
-            catch (ArgumentException ex)
+            catch (Exception ex)
             {
-                MessageBox.Show(ex.Message, "Error de validación", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-            catch (InvalidOperationException ex)
-            {
-                MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show($"Error al agregar género: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
-        private void btnModificar_Click(object sender, EventArgs e)
+        private async void btnModificar_Click(object sender, EventArgs e)
         {
             if (dgvGeneros.SelectedRows.Count == 0)
             {
@@ -65,6 +63,12 @@ namespace Biblioteca.UI.Desktop
 
             try
             {
+                if (string.IsNullOrWhiteSpace(txtNombreGenero.Text))
+                {
+                    MessageBox.Show("El nombre del género es requerido.", "Error de validación", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+
                 // 1. Obtenemos el DTO del género seleccionado.
                 var generoSeleccionado = (GeneroDto)dgvGeneros.SelectedRows[0].DataBoundItem;
 
@@ -72,33 +76,30 @@ namespace Biblioteca.UI.Desktop
                 var generoModificadoDto = new GeneroDto 
                 { 
                     Id = generoSeleccionado.Id, 
-                    Nombre = txtNombreGenero.Text 
+                    Nombre = txtNombreGenero.Text.Trim()
                 };
 
-                // 3. Llamamos al servicio de actualización.
-                bool resultado = _generoService.Update(generoModificadoDto);
+                // 3. Llamamos al cliente API de actualización.
+                bool resultado = await _generoApiClient.UpdateAsync(generoModificadoDto);
 
                 if (resultado)
                 {
-                    MessageBox.Show("Género modificado con éxito.");
-                    CargarGeneros(); // Refrescamos la grilla.
+                    MessageBox.Show("Género modificado con éxito.", "Éxito", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    await CargarGeneros(); // Refrescamos la grilla.
+                    txtNombreGenero.Clear();
                 }
                 else
                 {
-                    MessageBox.Show("No se pudo encontrar el género para modificar.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    MessageBox.Show("No se pudo actualizar el género.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             }
-            catch (ArgumentException ex)
+            catch (Exception ex)
             {
-                MessageBox.Show(ex.Message, "Error de validación", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-            catch (InvalidOperationException ex)
-            {
-                MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show($"Error al modificar género: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
         
-        private void btnEliminar_Click(object sender, EventArgs e)
+        private async void btnEliminar_Click(object sender, EventArgs e)
         {
             if (dgvGeneros.SelectedRows.Count == 0)
             {
@@ -114,33 +115,51 @@ namespace Biblioteca.UI.Desktop
                 try
                 {
                     var generoSeleccionado = (GeneroDto)dgvGeneros.SelectedRows[0].DataBoundItem;
-                    bool resultado = _generoService.Delete(generoSeleccionado.Id);
+                    bool resultado = await _generoApiClient.DeleteAsync(generoSeleccionado.Id);
 
                     if (resultado)
                     {
-                        MessageBox.Show("Género eliminado con éxito.");
-                        CargarGeneros();
+                        MessageBox.Show("Género eliminado con éxito.", "Éxito", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        await CargarGeneros();
+                        txtNombreGenero.Clear();
                     }
                     else
                     {
-                        MessageBox.Show("No se pudo encontrar el género para eliminar.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        MessageBox.Show("No se pudo eliminar el género.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     }
                 }
-                catch (InvalidOperationException ex)
+                catch (Exception ex)
                 {
-                    MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    MessageBox.Show($"Error al eliminar género: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             }
         }
 
-        private void CargarGeneros()
+        private async Task CargarGeneros()
         {
-            var generosDto = _generoService.GetAll().ToList();
+            try
+            {
+                var generosDto = (await _generoApiClient.GetAllAsync()).ToList();
 
-            dgvGeneros.DataSource = null;
-            dgvGeneros.DataSource = generosDto;
+                dgvGeneros.DataSource = null;
+                dgvGeneros.DataSource = generosDto;
+                
+                // Limpiar la selección para que no se cargue automáticamente el primer elemento
+                dgvGeneros.ClearSelection();
 
+                // Dejar campo de entrada vacío al iniciar
+                LimpiarCampos();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error al cargar géneros: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private void LimpiarCampos()
+        {
             txtNombreGenero.Clear();
+            dgvGeneros.ClearSelection();
         }
 
         private void textBox1_TextChanged(object sender, EventArgs e)

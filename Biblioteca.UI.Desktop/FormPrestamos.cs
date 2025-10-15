@@ -171,6 +171,7 @@ namespace Biblioteca.UI.Desktop
                     await _prestamoApiClient.DevolverAsync(prestamoSeleccionado.Id, DateTime.Now);
                     MessageBox.Show("Libro devuelto exitosamente. El libro ahora está disponible.", "Éxito", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     await CargarDatos();
+                    LimpiarCampos();
                 }
                 catch (Exception ex)
                 {
@@ -205,6 +206,8 @@ namespace Biblioteca.UI.Desktop
                 await CargarSocios();
                 await CargarPrestamos();
                 ConfigurarFechas();
+                // Dejar combos sin selección y botones deshabilitados para ingreso del usuario
+                LimpiarCampos();
             }
             catch (Exception ex)
             {
@@ -265,6 +268,9 @@ namespace Biblioteca.UI.Desktop
                 }
 
                 lblEstado.Text = $"Mostrando préstamos {_filtroActual} ({_prestamos.Count})";
+                
+                // Limpiar la selección para que no se cargue automáticamente el primer elemento
+                dgvPrestamos.ClearSelection();
             }
             catch (Exception ex)
             {
@@ -286,7 +292,7 @@ namespace Biblioteca.UI.Desktop
                 cmbLibro.DataSource = librosCombo;
                 cmbLibro.DisplayMember = "Display";
                 cmbLibro.ValueMember = "Id";
-                if (librosCombo.Count > 0) cmbLibro.SelectedIndex = 0;
+                cmbLibro.SelectedIndex = -1;
             }
             catch (Exception ex)
             {
@@ -308,7 +314,7 @@ namespace Biblioteca.UI.Desktop
                 cmbSocio.DataSource = sociosCombo;
                 cmbSocio.DisplayMember = "Display";
                 cmbSocio.ValueMember = "Id";
-                if (sociosCombo.Count > 0) cmbSocio.SelectedIndex = 0;
+                cmbSocio.SelectedIndex = -1;
             }
             catch (Exception ex)
             {
@@ -324,10 +330,11 @@ namespace Biblioteca.UI.Desktop
 
         private void LimpiarCampos()
         {
-            if (cmbLibro.Items.Count > 0) cmbLibro.SelectedIndex = 0;
-            if (cmbSocio.Items.Count > 0) cmbSocio.SelectedIndex = 0;
+            cmbLibro.SelectedIndex = -1;
+            cmbSocio.SelectedIndex = -1;
             ConfigurarFechas();
             btnDevolver.Enabled = false;
+            dgvPrestamos.ClearSelection();
         }
     }
 }

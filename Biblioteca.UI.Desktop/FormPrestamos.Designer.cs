@@ -91,17 +91,18 @@ namespace Biblioteca.UI.Desktop
             this.lblTitulo.Name = "lblTitulo";
             this.lblTitulo.Size = new Size(265, 30);
             this.lblTitulo.TabIndex = 0;
-            this.lblTitulo.Text = "?? Gestión de Préstamos";
+            this.lblTitulo.Text = "Gestión de Préstamos";
             // 
             // tableLayoutInputs
             // 
             this.tableLayoutInputs.BackColor = Color.White;
             this.tableLayoutInputs.ColumnCount = 5;
+            this.tableLayoutInputs.ColumnStyles.Clear();
             this.tableLayoutInputs.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
-            this.tableLayoutInputs.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 40F));
+            this.tableLayoutInputs.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 35F));
             this.tableLayoutInputs.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
-            this.tableLayoutInputs.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 40F));
-            this.tableLayoutInputs.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 20F));
+            this.tableLayoutInputs.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 35F));
+            this.tableLayoutInputs.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 30F));
             this.tableLayoutInputs.Controls.Add(this.label1, 0, 0);
             this.tableLayoutInputs.Controls.Add(this.cmbLibro, 1, 0);
             this.tableLayoutInputs.Controls.Add(this.label2, 2, 0);
@@ -111,19 +112,22 @@ namespace Biblioteca.UI.Desktop
             this.tableLayoutInputs.Controls.Add(this.label4, 2, 1);
             this.tableLayoutInputs.Controls.Add(this.dtpFechaDevolucionPrevista, 3, 1);
             this.tableLayoutInputs.Controls.Add(this.groupBox1, 4, 0);
-            this.tableLayoutInputs.Controls.Add(this.flowLayoutPanelBotones, 4, 2);
+            this.tableLayoutInputs.Controls.Add(this.flowLayoutPanelBotones, 0, 2);
             this.tableLayoutInputs.Dock = DockStyle.Fill;
             this.tableLayoutInputs.Location = new Point(18, 78);
             this.tableLayoutInputs.Name = "tableLayoutInputs";
             this.tableLayoutInputs.Padding = new Padding(20);
             this.tableLayoutInputs.RowCount = 3;
+            this.tableLayoutInputs.RowStyles.Clear();
             this.tableLayoutInputs.RowStyles.Add(new RowStyle(SizeType.AutoSize));
             this.tableLayoutInputs.RowStyles.Add(new RowStyle(SizeType.AutoSize));
             this.tableLayoutInputs.RowStyles.Add(new RowStyle(SizeType.AutoSize));
             this.tableLayoutInputs.Size = new Size(964, 160);
             this.tableLayoutInputs.TabIndex = 1;
-            // Set RowSpan for GroupBox using TableLayoutPanel method
+            // RowSpan para el GroupBox (filtros)
             this.tableLayoutInputs.SetRowSpan(this.groupBox1, 2);
+            // ColumnSpan para los botones (que ocupen todo el ancho)
+            this.tableLayoutInputs.SetColumnSpan(this.flowLayoutPanelBotones, 5);
             // 
             // label1
             // 
@@ -176,7 +180,7 @@ namespace Biblioteca.UI.Desktop
             this.label3.Font = new Font("Segoe UI", 10F);
             this.label3.Location = new Point(23, 68);
             this.label3.Name = "label3";
-            this.label3.Size = new Size(109, 19);
+            this.label3.Size = new Size(116, 19);
             this.label3.TabIndex = 4;
             this.label3.Text = "Fecha Préstamo:";
             // 
@@ -197,7 +201,7 @@ namespace Biblioteca.UI.Desktop
             this.label4.Font = new Font("Segoe UI", 10F);
             this.label4.Location = new Point(367, 68);
             this.label4.Name = "label4";
-            this.label4.Size = new Size(146, 19);
+            this.label4.Size = new Size(134, 19);
             this.label4.TabIndex = 6;
             this.label4.Text = "Devolución Prevista:";
             // 
@@ -213,7 +217,8 @@ namespace Biblioteca.UI.Desktop
             // 
             // groupBox1
             // 
-            this.groupBox1.Anchor = AnchorStyles.Left | AnchorStyles.Right;
+            this.groupBox1.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+            this.groupBox1.Dock = DockStyle.Fill;
             this.groupBox1.Controls.Add(this.btnVerTodos);
             this.groupBox1.Controls.Add(this.btnVerVencidos);
             this.groupBox1.Controls.Add(this.btnVerActivos);
@@ -224,7 +229,7 @@ namespace Biblioteca.UI.Desktop
             this.groupBox1.Size = new Size(227, 105);
             this.groupBox1.TabIndex = 8;
             this.groupBox1.TabStop = false;
-            this.groupBox1.Text = "?? Filtros";
+            this.groupBox1.Text = "Filtros";
             // 
             // btnVerTodos
             // 
@@ -238,7 +243,7 @@ namespace Biblioteca.UI.Desktop
             this.btnVerTodos.Name = "btnVerTodos";
             this.btnVerTodos.Size = new Size(207, 25);
             this.btnVerTodos.TabIndex = 2;
-            this.btnVerTodos.Text = "?? Ver Todos";
+            this.btnVerTodos.Text = "Ver Todos";
             this.btnVerTodos.UseVisualStyleBackColor = false;
             this.btnVerTodos.Click += new EventHandler(this.btnVerTodos_Click);
             // 
@@ -254,7 +259,7 @@ namespace Biblioteca.UI.Desktop
             this.btnVerVencidos.Name = "btnVerVencidos";
             this.btnVerVencidos.Size = new Size(207, 25);
             this.btnVerVencidos.TabIndex = 1;
-            this.btnVerVencidos.Text = "?? Ver Vencidos";
+            this.btnVerVencidos.Text = "Ver Vencidos";
             this.btnVerVencidos.UseVisualStyleBackColor = false;
             this.btnVerVencidos.Click += new EventHandler(this.btnVerVencidos_Click);
             // 
@@ -270,21 +275,24 @@ namespace Biblioteca.UI.Desktop
             this.btnVerActivos.Name = "btnVerActivos";
             this.btnVerActivos.Size = new Size(207, 25);
             this.btnVerActivos.TabIndex = 0;
-            this.btnVerActivos.Text = "? Ver Activos";
+            this.btnVerActivos.Text = "Ver Activos";
             this.btnVerActivos.UseVisualStyleBackColor = false;
             this.btnVerActivos.Click += new EventHandler(this.btnVerActivos_Click);
             // 
             // flowLayoutPanelBotones
             // 
             this.flowLayoutPanelBotones.AutoSize = true;
+            this.flowLayoutPanelBotones.AutoSizeMode = AutoSizeMode.GrowAndShrink;
+            this.flowLayoutPanelBotones.WrapContents = true;
+            this.flowLayoutPanelBotones.Dock = DockStyle.Fill;
             this.flowLayoutPanelBotones.Controls.Add(this.btnAgregar);
             this.flowLayoutPanelBotones.Controls.Add(this.btnModificar);
             this.flowLayoutPanelBotones.Controls.Add(this.btnEliminar);
             this.flowLayoutPanelBotones.Controls.Add(this.btnDevolver);
             this.flowLayoutPanelBotones.FlowDirection = FlowDirection.LeftToRight;
-            this.flowLayoutPanelBotones.Location = new Point(714, 134);
+            this.flowLayoutPanelBotones.Location = new Point(23, 134);
             this.flowLayoutPanelBotones.Name = "flowLayoutPanelBotones";
-            this.flowLayoutPanelBotones.Size = new Size(424, 36);
+            this.flowLayoutPanelBotones.Size = new Size(918, 36);
             this.flowLayoutPanelBotones.TabIndex = 9;
             // 
             // btnAgregar
@@ -298,7 +306,7 @@ namespace Biblioteca.UI.Desktop
             this.btnAgregar.Name = "btnAgregar";
             this.btnAgregar.Size = new Size(100, 30);
             this.btnAgregar.TabIndex = 0;
-            this.btnAgregar.Text = "? Agregar";
+            this.btnAgregar.Text = "+ Agregar";
             this.btnAgregar.UseVisualStyleBackColor = false;
             this.btnAgregar.Click += new EventHandler(this.btnAgregar_Click);
             // 
@@ -313,7 +321,7 @@ namespace Biblioteca.UI.Desktop
             this.btnModificar.Name = "btnModificar";
             this.btnModificar.Size = new Size(100, 30);
             this.btnModificar.TabIndex = 1;
-            this.btnModificar.Text = "?? Modificar";
+            this.btnModificar.Text = "Modificar";
             this.btnModificar.UseVisualStyleBackColor = false;
             this.btnModificar.Click += new EventHandler(this.btnModificar_Click);
             // 
@@ -328,7 +336,7 @@ namespace Biblioteca.UI.Desktop
             this.btnEliminar.Name = "btnEliminar";
             this.btnEliminar.Size = new Size(100, 30);
             this.btnEliminar.TabIndex = 2;
-            this.btnEliminar.Text = "??? Eliminar";
+            this.btnEliminar.Text = "- Eliminar";
             this.btnEliminar.UseVisualStyleBackColor = false;
             this.btnEliminar.Click += new EventHandler(this.btnEliminar_Click);
             // 
@@ -344,7 +352,7 @@ namespace Biblioteca.UI.Desktop
             this.btnDevolver.Name = "btnDevolver";
             this.btnDevolver.Size = new Size(100, 30);
             this.btnDevolver.TabIndex = 3;
-            this.btnDevolver.Text = "?? Devolver";
+            this.btnDevolver.Text = "Devolver";
             this.btnDevolver.UseVisualStyleBackColor = false;
             this.btnDevolver.Click += new EventHandler(this.btnDevolver_Click);
             // 
@@ -366,7 +374,7 @@ namespace Biblioteca.UI.Desktop
             this.lblEstado.ForeColor = Color.DarkSlateBlue;
             this.lblEstado.Location = new Point(20, 10);
             this.lblEstado.Name = "lblEstado";
-            this.lblEstado.Size = new Size(204, 19);
+            this.lblEstado.Size = new Size(228, 19);
             this.lblEstado.TabIndex = 0;
             this.lblEstado.Text = "Mostrando todos los préstamos";
             // 
@@ -409,7 +417,7 @@ namespace Biblioteca.UI.Desktop
             this.MinimumSize = new Size(800, 500);
             this.Name = "FormPrestamos";
             this.StartPosition = FormStartPosition.CenterScreen;
-            this.Text = "?? Gestión de Préstamos - Biblioteca";
+            this.Text = "Gestión de Préstamos - Biblioteca";
             this.WindowState = FormWindowState.Maximized;
             this.Load += new EventHandler(this.FormPrestamos_Load);
             this.tableLayoutPrincipal.ResumeLayout(false);

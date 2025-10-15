@@ -167,6 +167,8 @@ namespace Biblioteca.UI.Desktop
                 await CargarGeneros();
                 await CargarEditoriales();
                 await CargarLibros();
+                // Dejar controles listos para ingreso
+                LimpiarCampos();
             }
             catch (Exception ex)
             {
@@ -197,6 +199,9 @@ namespace Biblioteca.UI.Desktop
                     dgvLibros.Columns["GeneroId"].Visible = false;
                     dgvLibros.Columns["EditorialId"].Visible = false;
                 }
+                
+                // Limpiar la selección para que no se cargue automáticamente el primer elemento
+                dgvLibros.ClearSelection();
             }
             catch (Exception ex)
             {
@@ -265,6 +270,7 @@ namespace Biblioteca.UI.Desktop
             cmbAutor.SelectedIndex = -1;
             cmbGenero.SelectedIndex = -1;
             cmbEditorial.SelectedIndex = -1;
+            dgvLibros.ClearSelection();
         }
 
         private void comboBox2_SelectedIndexChanged(object sender, EventArgs e)

@@ -196,6 +196,8 @@ namespace Biblioteca.UI.Desktop
                 await CargarPersonas();
                 await CargarUsuarios();
                 ConfigurarComboBoxes();
+                // Asegurar que todo quede vacío para ingreso del usuario
+                LimpiarCampos();
             }
             catch (Exception ex)
             {
@@ -224,6 +226,9 @@ namespace Biblioteca.UI.Desktop
                     dgvUsuarios.Columns["Clave"].Visible = false;
                     dgvUsuarios.Columns["PersonaId"].Visible = false;
                 }
+                
+                // Limpiar la selección para que no se cargue automáticamente el primer elemento
+                dgvUsuarios.ClearSelection();
             }
             catch (Exception ex)
             {
@@ -248,6 +253,7 @@ namespace Biblioteca.UI.Desktop
             // Configurar combo de roles
             cmbRol.Items.Clear();
             cmbRol.Items.AddRange(new[] { "administrador", "bibliotecario", "socio" });
+            cmbRol.SelectedIndex = -1;
         }
 
         private void LimpiarCampos()
@@ -259,6 +265,7 @@ namespace Biblioteca.UI.Desktop
             txtNombreUsuario.Clear();
             txtClave.Clear();
             cmbRol.SelectedIndex = -1;
+            dgvUsuarios.ClearSelection();
         }
     }
 }
