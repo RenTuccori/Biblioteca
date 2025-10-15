@@ -1,5 +1,6 @@
 ﻿// EN: Biblioteca.UI.Desktop/FormAutores.cs
 
+using Biblioteca.API.Clients;
 using Biblioteca.Data;
 using Biblioteca.Domain.Services;
 using Biblioteca.DTOs;
@@ -8,21 +9,18 @@ namespace Biblioteca.UI.Desktop
 {
     public partial class FormAutores : Form
     {
-        private readonly AutorService _autorService;
+        private readonly AutorApiClient _autorApiClient;
+        private List<AutorDto> _autores = new();
 
-        public FormAutores()
+        public FormAutores(AutorApiClient autorApiClient)
         {
             InitializeComponent();
-            
-            // Configurar servicios con dependencias
-            var context = DatabaseHelper.CreateDbContext();
-            var autorRepository = new AutorRepository(context);
-            _autorService = new AutorService(autorRepository);
+            _autorApiClient = autorApiClient;
         }
 
-        private void FormAutores_Load(object sender, EventArgs e)
+        private async void FormAutores_Load(object sender, EventArgs e)
         {
-            CargarAutores();
+            await CargarAutores();
         }
 
         private void dgvAutores_SelectionChanged(object sender, EventArgs e)
@@ -35,67 +33,76 @@ namespace Biblioteca.UI.Desktop
             }
         }
 
-        private void btnAgregar_Click(object sender, EventArgs e)
+        private async void btnAgregar_Click(object sender, EventArgs e)
         {
             try
             {
+                if (string.IsNullOrWhiteSpace(txtNombreAutor.Text) || string.IsNullOrWhiteSpace(txtApellidoAutor.Text))
+                {
+                    MessageBox.Show("Nombre y Apellido son requeridos.", "Error de validación", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+
                 var nuevoAutorDto = new CrearAutorDto 
                 { 
-                    Nombre = txtNombreAutor.Text, 
-                    Apellido = txtApellidoAutor.Text 
+                    Nombre = txtNombreAutor.Text.Trim(), 
+                    Apellido = txtApellidoAutor.Text.Trim() 
                 };
-                _autorService.Add(nuevoAutorDto);
-                MessageBox.Show("Autor agregado con éxito.");
-                CargarAutores();
+                
+                await _autorApiClient.CreateAsync(nuevoAutorDto);
+                MessageBox.Show("Autor agregado con éxito.", "Éxito", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                await CargarAutores();
+                LimpiarCampos();
             }
-            catch (ArgumentException ex)
+            catch (Exception ex)
             {
-                MessageBox.Show(ex.Message, "Error de validación", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-            catch (InvalidOperationException ex)
-            {
-                MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show($"Error al agregar autor: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
-        private void btnModificar_Click(object sender, EventArgs e)
+        private async void btnModificar_Click(object sender, EventArgs e)
         {
             if (dgvAutores.SelectedRows.Count == 0)
             {
                 MessageBox.Show("Por favor, seleccione un autor para modificar.", "Atención", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
+            
             try
             {
+                if (string.IsNullOrWhiteSpace(txtNombreAutor.Text) || string.IsNullOrWhiteSpace(txtApellidoAutor.Text))
+                {
+                    MessageBox.Show("Nombre y Apellido son requeridos.", "Error de validación", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+
                 var autorSeleccionado = (AutorDto)dgvAutores.SelectedRows[0].DataBoundItem;
                 var autorModificadoDto = new AutorDto 
                 { 
                     Id = autorSeleccionado.Id, 
-                    Nombre = txtNombreAutor.Text, 
-                    Apellido = txtApellidoAutor.Text 
+                    Nombre = txtNombreAutor.Text.Trim(), 
+                    Apellido = txtApellidoAutor.Text.Trim() 
                 };
                 
-                if (_autorService.Update(autorModificadoDto))
+                var resultado = await _autorApiClient.UpdateAsync(autorModificadoDto);
+                if (resultado)
                 {
-                    MessageBox.Show("Autor modificado con éxito.");
-                    CargarAutores();
+                    MessageBox.Show("Autor modificado con éxito.", "Éxito", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    await CargarAutores();
+                    LimpiarCampos();
                 }
                 else
                 {
-                    MessageBox.Show("No se pudo encontrar el autor para modificar.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    MessageBox.Show("No se pudo actualizar el autor.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             }
-            catch (ArgumentException ex)
+            catch (Exception ex)
             {
-                MessageBox.Show(ex.Message, "Error de validación", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-            catch (InvalidOperationException ex)
-            {
-                MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show($"Error al modificar autor: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
-        private void btnEliminar_Click(object sender, EventArgs e)
+        private async void btnEliminar_Click(object sender, EventArgs e)
         {
             if (dgvAutores.SelectedRows.Count == 0)
             {
@@ -109,32 +116,72 @@ namespace Biblioteca.UI.Desktop
                 try
                 {
                     var autorSeleccionado = (AutorDto)dgvAutores.SelectedRows[0].DataBoundItem;
-                    if (_autorService.Delete(autorSeleccionado.Id))
+                    var resultado = await _autorApiClient.DeleteAsync(autorSeleccionado.Id);
+                    if (resultado)
                     {
-                        MessageBox.Show("Autor eliminado con éxito.");
-                        CargarAutores();
+                        MessageBox.Show("Autor eliminado con éxito.", "Éxito", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        await CargarAutores();
+                        LimpiarCampos();
                     }
                     else
                     {
-                        MessageBox.Show("No se pudo encontrar el autor para eliminar.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        MessageBox.Show("No se pudo eliminar el autor.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     }
                 }
-                catch (InvalidOperationException ex)
+                catch (Exception ex)
                 {
-                    MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    MessageBox.Show($"Error al eliminar autor: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             }
         }
 
-        private void CargarAutores()
+        private async void btnBuscar_Click(object sender, EventArgs e)
         {
-            var autoresDto = _autorService.GetAll().ToList();
+            try
+            {
+                if (string.IsNullOrWhiteSpace(txtBuscar.Text))
+                {
+                    await CargarAutores();
+                }
+                else
+                {
+                    _autores = (await _autorApiClient.GetByCriteriaAsync(txtBuscar.Text.Trim())).ToList();
+                    dgvAutores.DataSource = null;
+                    dgvAutores.DataSource = _autores;
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error al buscar autores: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
 
-            dgvAutores.DataSource = null;
-            dgvAutores.DataSource = autoresDto;
+        private async Task CargarAutores()
+        {
+            try
+            {
+                _autores = (await _autorApiClient.GetAllAsync()).ToList();
+                dgvAutores.DataSource = null;
+                dgvAutores.DataSource = _autores;
+                
+                if (dgvAutores.Columns.Count > 0)
+                {
+                    dgvAutores.Columns["Id"].HeaderText = "ID";
+                    dgvAutores.Columns["Nombre"].HeaderText = "Nombre";
+                    dgvAutores.Columns["Apellido"].HeaderText = "Apellido";
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error al cargar autores: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
 
+        private void LimpiarCampos()
+        {
             txtNombreAutor.Clear();
             txtApellidoAutor.Clear();
+            txtBuscar.Clear();
         }
     }
 }

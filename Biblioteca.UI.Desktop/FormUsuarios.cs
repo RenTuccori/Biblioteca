@@ -1,38 +1,25 @@
-using Biblioteca.Data;
-using Biblioteca.Domain.Services;
+using Biblioteca.API.Clients;
 using Biblioteca.DTOs;
 
 namespace Biblioteca.UI.Desktop
 {
     public partial class FormUsuarios : Form
     {
-        private readonly UsuarioService _usuarioService;
-        private readonly PersonaService _personaService;
+        private readonly UsuarioApiClient _usuarioApiClient;
+        private readonly PersonaApiClient _personaApiClient;
+        private List<UsuarioDto> _usuarios = new();
+        private List<PersonaDto> _personas = new();
 
-        public FormUsuarios()
+        public FormUsuarios(UsuarioApiClient usuarioApiClient, PersonaApiClient personaApiClient)
         {
             InitializeComponent();
-            
-            var context = DatabaseHelper.CreateDbContext();
-            var usuarioRepository = new UsuarioRepository(context);
-            var personaRepository = new PersonaRepository(context);
-            
-            _usuarioService = new UsuarioService(usuarioRepository, personaRepository);
-            _personaService = new PersonaService(personaRepository);
+            _usuarioApiClient = usuarioApiClient;
+            _personaApiClient = personaApiClient;
         }
 
-        private void FormUsuarios_Load(object sender, EventArgs e)
+        private async void FormUsuarios_Load(object sender, EventArgs e)
         {
-            CargarUsuarios();
-            ConfigurarComboRol();
-        }
-
-        private void ConfigurarComboRol()
-        {
-            cmbRol.Items.Clear();
-            cmbRol.Items.Add("socio");
-            cmbRol.Items.Add("bibliotecario");
-            cmbRol.SelectedIndex = 0;
+            await CargarDatos();
         }
 
         private void dgvUsuarios_SelectionChanged(object sender, EventArgs e)
@@ -40,14 +27,12 @@ namespace Biblioteca.UI.Desktop
             if (dgvUsuarios.SelectedRows.Count > 0)
             {
                 var usuarioSeleccionado = (UsuarioDto)dgvUsuarios.SelectedRows[0].DataBoundItem;
-                
-                // Cargar datos del usuario
                 txtNombreUsuario.Text = usuarioSeleccionado.NombreUsuario;
                 txtClave.Text = usuarioSeleccionado.Clave;
                 cmbRol.SelectedItem = usuarioSeleccionado.Rol;
                 
-                // Cargar datos de la persona asociada
-                var persona = _personaService.Get(usuarioSeleccionado.PersonaId);
+                // Buscar y mostrar datos de la persona
+                var persona = _personas.FirstOrDefault(p => p.Id == usuarioSeleccionado.PersonaId);
                 if (persona != null)
                 {
                     txtNombre.Text = persona.Nombre;
@@ -58,46 +43,54 @@ namespace Biblioteca.UI.Desktop
             }
         }
 
-        private void btnAgregar_Click(object sender, EventArgs e)
+        private async void btnAgregar_Click(object sender, EventArgs e)
         {
             try
             {
+                if (string.IsNullOrWhiteSpace(txtNombre.Text) || 
+                    string.IsNullOrWhiteSpace(txtApellido.Text) ||
+                    string.IsNullOrWhiteSpace(txtDni.Text) ||
+                    string.IsNullOrWhiteSpace(txtEmail.Text) ||
+                    string.IsNullOrWhiteSpace(txtNombreUsuario.Text) || 
+                    string.IsNullOrWhiteSpace(txtClave.Text) ||
+                    cmbRol.SelectedItem == null)
+                {
+                    MessageBox.Show("Todos los campos son requeridos.", "Error de validación", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+
                 // Primero crear la persona
                 var nuevaPersonaDto = new CrearPersonaDto
                 {
-                    Nombre = txtNombre.Text,
-                    Apellido = txtApellido.Text,
-                    Dni = txtDni.Text,
-                    Email = txtEmail.Text
+                    Nombre = txtNombre.Text.Trim(),
+                    Apellido = txtApellido.Text.Trim(),
+                    Dni = txtDni.Text.Trim(),
+                    Email = txtEmail.Text.Trim()
                 };
                 
-                var personaCreada = _personaService.Add(nuevaPersonaDto);
-                
+                var personaCreada = await _personaApiClient.CreateAsync(nuevaPersonaDto);
+
                 // Luego crear el usuario asociado
-                var nuevoUsuarioDto = new CrearUsuarioDto
-                {
-                    NombreUsuario = txtNombreUsuario.Text,
+                var nuevoUsuarioDto = new CrearUsuarioDto 
+                { 
+                    NombreUsuario = txtNombreUsuario.Text.Trim(),
                     Clave = txtClave.Text,
-                    Rol = cmbRol.SelectedItem?.ToString() ?? "socio",
+                    Rol = cmbRol.SelectedItem.ToString()!,
                     PersonaId = personaCreada.Id
                 };
                 
-                _usuarioService.Add(nuevoUsuarioDto);
-                MessageBox.Show("Usuario agregado con éxito.");
-                CargarUsuarios();
-                LimpiarControles();
+                await _usuarioApiClient.CreateAsync(nuevoUsuarioDto);
+                MessageBox.Show("Usuario agregado con éxito.", "Éxito", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                await CargarDatos();
+                LimpiarCampos();
             }
-            catch (ArgumentException ex)
+            catch (Exception ex)
             {
-                MessageBox.Show(ex.Message, "Error de validación", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-            catch (InvalidOperationException ex)
-            {
-                MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show($"Error al agregar usuario: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
-        private void btnModificar_Click(object sender, EventArgs e)
+        private async void btnModificar_Click(object sender, EventArgs e)
         {
             if (dgvUsuarios.SelectedRows.Count == 0)
             {
@@ -107,52 +100,61 @@ namespace Biblioteca.UI.Desktop
             
             try
             {
+                if (string.IsNullOrWhiteSpace(txtNombre.Text) || 
+                    string.IsNullOrWhiteSpace(txtApellido.Text) ||
+                    string.IsNullOrWhiteSpace(txtDni.Text) ||
+                    string.IsNullOrWhiteSpace(txtEmail.Text) ||
+                    string.IsNullOrWhiteSpace(txtNombreUsuario.Text) || 
+                    string.IsNullOrWhiteSpace(txtClave.Text) ||
+                    cmbRol.SelectedItem == null)
+                {
+                    MessageBox.Show("Todos los campos son requeridos.", "Error de validación", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+
                 var usuarioSeleccionado = (UsuarioDto)dgvUsuarios.SelectedRows[0].DataBoundItem;
-                
+
                 // Actualizar la persona
                 var personaDto = new PersonaDto
                 {
                     Id = usuarioSeleccionado.PersonaId,
-                    Nombre = txtNombre.Text,
-                    Apellido = txtApellido.Text,
-                    Dni = txtDni.Text,
-                    Email = txtEmail.Text
+                    Nombre = txtNombre.Text.Trim(),
+                    Apellido = txtApellido.Text.Trim(),
+                    Dni = txtDni.Text.Trim(),
+                    Email = txtEmail.Text.Trim()
                 };
                 
-                _personaService.Update(personaDto);
-                
+                await _personaApiClient.UpdateAsync(personaDto);
+
                 // Actualizar el usuario
-                var usuarioDto = new UsuarioDto
-                {
+                var usuarioModificadoDto = new UsuarioDto 
+                { 
                     Id = usuarioSeleccionado.Id,
-                    NombreUsuario = txtNombreUsuario.Text,
+                    NombreUsuario = txtNombreUsuario.Text.Trim(),
                     Clave = txtClave.Text,
-                    Rol = cmbRol.SelectedItem?.ToString() ?? "socio",
+                    Rol = cmbRol.SelectedItem.ToString()!,
                     PersonaId = usuarioSeleccionado.PersonaId
                 };
                 
-                if (_usuarioService.Update(usuarioDto))
+                var resultado = await _usuarioApiClient.UpdateAsync(usuarioModificadoDto);
+                if (resultado)
                 {
-                    MessageBox.Show("Usuario modificado con éxito.");
-                    CargarUsuarios();
-                    LimpiarControles();
+                    MessageBox.Show("Usuario modificado con éxito.", "Éxito", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    await CargarDatos();
+                    LimpiarCampos();
                 }
                 else
                 {
-                    MessageBox.Show("No se pudo encontrar el usuario para modificar.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    MessageBox.Show("No se pudo actualizar el usuario.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             }
-            catch (ArgumentException ex)
+            catch (Exception ex)
             {
-                MessageBox.Show(ex.Message, "Error de validación", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-            catch (InvalidOperationException ex)
-            {
-                MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show($"Error al modificar usuario: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
-        private void btnEliminar_Click(object sender, EventArgs e)
+        private async void btnEliminar_Click(object sender, EventArgs e)
         {
             if (dgvUsuarios.SelectedRows.Count == 0)
             {
@@ -160,46 +162,95 @@ namespace Biblioteca.UI.Desktop
                 return;
             }
             
-            var confirmacion = MessageBox.Show("¿Está seguro de que desea eliminar este usuario?", "Confirmar eliminación", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+            var confirmacion = MessageBox.Show("¿Está seguro de que desea eliminar este usuario? Esto también eliminará la persona asociada.", "Confirmar eliminación", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
             if (confirmacion == DialogResult.Yes)
             {
                 try
                 {
                     var usuarioSeleccionado = (UsuarioDto)dgvUsuarios.SelectedRows[0].DataBoundItem;
                     
-                    // Eliminar primero el usuario
-                    if (_usuarioService.Delete(usuarioSeleccionado.Id))
+                    // Eliminar el usuario (esto debería manejar la cascada en la API)
+                    var resultado = await _usuarioApiClient.DeleteAsync(usuarioSeleccionado.Id);
+                    if (resultado)
                     {
-                        // Luego eliminar la persona asociada
-                        _personaService.Delete(usuarioSeleccionado.PersonaId);
-                        
-                        MessageBox.Show("Usuario eliminado con éxito.");
-                        CargarUsuarios();
-                        LimpiarControles();
+                        MessageBox.Show("Usuario eliminado con éxito.", "Éxito", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        await CargarDatos();
+                        LimpiarCampos();
                     }
                     else
                     {
-                        MessageBox.Show("No se pudo encontrar el usuario para eliminar.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        MessageBox.Show("No se pudo eliminar el usuario.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     }
                 }
-                catch (InvalidOperationException ex)
+                catch (Exception ex)
                 {
-                    MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    MessageBox.Show($"Error al eliminar usuario: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             }
         }
 
-        private void CargarUsuarios()
+        private async Task CargarDatos()
         {
-            var usuariosDto = _usuarioService.GetAll().ToList();
-
-            dgvUsuarios.DataSource = null;
-            dgvUsuarios.DataSource = usuariosDto;
-
-            LimpiarControles();
+            try
+            {
+                await CargarPersonas();
+                await CargarUsuarios();
+                ConfigurarComboBoxes();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error al cargar datos: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
 
-        private void LimpiarControles()
+        private async Task CargarUsuarios()
+        {
+            try
+            {
+                _usuarios = (await _usuarioApiClient.GetAllAsync()).ToList();
+                dgvUsuarios.DataSource = null;
+                dgvUsuarios.DataSource = _usuarios;
+                
+                if (dgvUsuarios.Columns.Count > 0)
+                {
+                    dgvUsuarios.Columns["Id"].HeaderText = "ID";
+                    dgvUsuarios.Columns["NombreUsuario"].HeaderText = "Usuario";
+                    dgvUsuarios.Columns["Clave"].HeaderText = "Clave";
+                    dgvUsuarios.Columns["Rol"].HeaderText = "Rol";
+                    dgvUsuarios.Columns["PersonaId"].HeaderText = "ID Persona";
+                    dgvUsuarios.Columns["PersonaNombreCompleto"].HeaderText = "Nombre Completo";
+                    
+                    // Ocultar campos sensibles
+                    dgvUsuarios.Columns["Clave"].Visible = false;
+                    dgvUsuarios.Columns["PersonaId"].Visible = false;
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error al cargar usuarios: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private async Task CargarPersonas()
+        {
+            try
+            {
+                _personas = (await _personaApiClient.GetAllAsync()).ToList();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error al cargar personas: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private void ConfigurarComboBoxes()
+        {
+            // Configurar combo de roles
+            cmbRol.Items.Clear();
+            cmbRol.Items.AddRange(new[] { "administrador", "bibliotecario", "socio" });
+        }
+
+        private void LimpiarCampos()
         {
             txtNombre.Clear();
             txtApellido.Clear();
@@ -207,7 +258,7 @@ namespace Biblioteca.UI.Desktop
             txtEmail.Clear();
             txtNombreUsuario.Clear();
             txtClave.Clear();
-            cmbRol.SelectedIndex = 0;
+            cmbRol.SelectedIndex = -1;
         }
     }
 }

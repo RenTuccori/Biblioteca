@@ -12,10 +12,22 @@
     <ProjectReference Include="..\Biblioteca.Domain.Services\Biblioteca.Domain.Services.csproj" />
     <ProjectReference Include="..\Biblioteca.DTOs\Biblioteca.DTOs.csproj" />
     <ProjectReference Include="..\Biblioteca.Data\Biblioteca.Data.csproj" />
+    <ProjectReference Include="..\Biblioteca.API.Clients\Biblioteca.API.Clients.csproj" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="9.0.8" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.8" />
+    <PackageReference Include="Microsoft.Extensions.Http" Version="9.0.8" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.8" />
+    <PackageReference Include="Microsoft.Extensions.Configuration" Version="9.0.8" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="9.0.8" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="appsettings.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
 </Project>
