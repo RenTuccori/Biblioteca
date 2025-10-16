@@ -51,7 +51,23 @@ builder.Services.AddHttpClient<PrestamoApiClient>(client =>
     client.DefaultRequestHeaders.Add("Accept", "application/json");
 });
 
+builder.Services.AddHttpClient<AuthApiClient>(client =>
+{
+    client.BaseAddress = new Uri(apiBaseUrl);
+    client.DefaultRequestHeaders.Add("Accept", "application/json");
+});
+
+builder.Services.AddSingleton<IAuthService, SimpleAuthService>();
+
 var app = builder.Build();
+
+// Wire AuthServiceProvider
+using (var scope = app.Services.CreateScope())
+{
+    var authSvc = scope.ServiceProvider.GetRequiredService<IAuthService>();
+    await authSvc.InitializeAsync();
+    AuthServiceProvider.Register(authSvc);
+}
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())

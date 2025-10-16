@@ -112,12 +112,6 @@
                                                     }
                                                 </td>
                                                 <td class="text-center">
-                                                    @if (!prestamo.FechaDevolucionReal.HasValue)
-                                                    {
-                                                        <button class="btn btn-sm btn-success me-1" @onclick="() => DevolverLibro(prestamo.Id)" title="Devolver">
-                                                            <i class="fas fa-check"></i>
-                                                        </button>
-                                                    }
                                                     <button class="btn btn-sm btn-outline-info me-1" @onclick="() => AbrirModalEditar(prestamo)">
                                                         <i class="fas fa-edit"></i>
                                                     </button>

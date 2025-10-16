@@ -2,6 +2,51 @@ html, body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
+/* Top bar improvements */
+.top-row {
+    background-color: #0d6efd;
+    border-bottom: 1px solid rgba(255,255,255,0.2);
+    justify-content: space-between;
+    height: 3.5rem;
+    display: flex;
+    align-items: center;
+    padding-inline: 1rem;
+}
+
+.top-row .navbar-brand {
+    color: #fff;
+    font-weight: 600;
+    letter-spacing: .3px;
+    margin-right: auto;
+}
+
+.top-row .auth-actions { display: flex; align-items: center; gap: .75rem; }
+.top-row .auth-actions .username { color: #fff; font-weight: 500; }
+
+.top-row .btn-auth {
+    color: #0d6efd;
+    background-color: #fff;
+    border-color: #fff;
+    padding: .25rem .75rem;
+    font-size: .875rem;
+    border-radius: 999px;
+}
+
+.top-row .btn-auth:hover {
+    color: #0b5ed7;
+    background-color: #e9f2ff;
+    border-color: #e9f2ff;
+}
+
+.navbar-toggler {
+    border-color: rgba(255,255,255,0.85) !important;
+    background-color: rgba(255,255,255,0.1) !important;
+}
+
+.navbar-toggler .navbar-toggler-icon {
+    filter: invert(1) contrast(2);
+}
+
 h1:focus {
     outline: none;
 }
@@ -142,28 +187,54 @@ a, .btn-link {
 }
 
 .top-row {
-    background-color: #f7f7f7;
-    border-bottom: 1px solid #d6d5d5;
-    justify-content: flex-end;
+    background-color: #0d6efd; /* Bootstrap primary */
+    border-bottom: 1px solid rgba(255,255,255,0.2);
+    justify-content: space-between; /* brand left, actions + toggler right */
     height: 3.5rem;
     display: flex;
     align-items: center;
+    padding-inline: 1rem;
 }
 
-    .top-row ::deep a, .top-row ::deep .btn-link {
-        white-space: nowrap;
-        margin-left: 1.5rem;
-        text-decoration: none;
-    }
+.top-row .navbar-brand {
+    color: #fff;
+    font-weight: 600;
+    letter-spacing: .3px;
+    margin-right: auto; /* pushes the rest to the right */
+}
 
-    .top-row ::deep a:hover, .top-row ::deep .btn-link:hover {
-        text-decoration: underline;
-    }
+.top-row .auth-actions {
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+}
 
-    .top-row ::deep a:first-child {
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
+.top-row .auth-actions .username {
+    color: #fff;
+    font-weight: 500;
+}
+
+.top-row .btn-auth {
+    --bs-btn-color: #0d6efd;
+    --bs-btn-bg: #ffffff;
+    --bs-btn-border-color: #ffffff;
+    --bs-btn-hover-color: #0b5ed7;
+    --bs-btn-hover-bg: #e9f2ff;
+    --bs-btn-hover-border-color: #e9f2ff;
+    --bs-btn-padding-y: .25rem;
+    --bs-btn-padding-x: .75rem;
+    --bs-btn-font-size: .875rem;
+    border-radius: 999px;
+}
+
+.navbar-toggler {
+    border-color: rgba(255,255,255,0.85) !important;
+    background-color: rgba(255,255,255,0.1) !important;
+}
+
+.navbar-toggler .navbar-toggler-icon {
+    filter: invert(1) contrast(2);
+}
 
 @media (max-width: 640.98px) {
     .top-row:not(.auth) {

@@ -34,7 +34,6 @@ namespace Biblioteca.Domain.Services
             {
                 Id = usuario.Id,
                 NombreUsuario = usuario.NombreUsuario,
-                Clave = usuario.Clave,
                 Rol = usuario.Rol,
                 PersonaId = usuario.PersonaId,
                 PersonaNombreCompleto = $"{persona.Nombre} {persona.Apellido}"
@@ -66,7 +65,6 @@ namespace Biblioteca.Domain.Services
             {
                 Id = usuario.Id,
                 NombreUsuario = usuario.NombreUsuario,
-                Clave = usuario.Clave,
                 Rol = usuario.Rol,
                 PersonaId = usuario.PersonaId,
                 PersonaNombreCompleto = usuario.Persona != null ? $"{usuario.Persona.Nombre} {usuario.Persona.Apellido}" : ""
@@ -80,7 +78,6 @@ namespace Biblioteca.Domain.Services
             {
                 Id = u.Id,
                 NombreUsuario = u.NombreUsuario,
-                Clave = u.Clave,
                 Rol = u.Rol,
                 PersonaId = u.PersonaId,
                 PersonaNombreCompleto = u.Persona != null ? $"{u.Persona.Nombre} {u.Persona.Apellido}" : ""
@@ -97,7 +94,8 @@ namespace Biblioteca.Domain.Services
             if (persona == null)
                 throw new ArgumentException($"No existe una persona con Id {dto.PersonaId}");
 
-            var usuario = new Usuario(dto.Id, dto.NombreUsuario, dto.Clave, dto.Rol, dto.PersonaId);
+            // No cambiamos password aquí; exponer endpoint específico si es necesario
+            var usuario = new Usuario(dto.Id, dto.NombreUsuario, dto.Rol, dto.PersonaId);
             
             var result = _usuarioRepository.Update(usuario);
             if (result)
@@ -113,7 +111,6 @@ namespace Biblioteca.Domain.Services
             {
                 Id = u.Id,
                 NombreUsuario = u.NombreUsuario,
-                Clave = u.Clave,
                 Rol = u.Rol,
                 PersonaId = u.PersonaId,
                 PersonaNombreCompleto = u.Persona != null ? $"{u.Persona.Nombre} {u.Persona.Apellido}" : ""
@@ -127,11 +124,31 @@ namespace Biblioteca.Domain.Services
             {
                 Id = u.Id,
                 NombreUsuario = u.NombreUsuario,
-                Clave = u.Clave,
                 Rol = u.Rol,
                 PersonaId = u.PersonaId,
                 PersonaNombreCompleto = u.Persona != null ? $"{u.Persona.Nombre} {u.Persona.Apellido}" : ""
             });
+        }
+
+        public bool ChangePassword(int userId, string currentPassword, string newPassword)
+        {
+            if (string.IsNullOrWhiteSpace(currentPassword))
+                throw new ArgumentException("La contraseña actual es requerida.", nameof(currentPassword));
+            if (string.IsNullOrWhiteSpace(newPassword))
+                throw new ArgumentException("La nueva contraseña es requerida.", nameof(newPassword));
+
+            var user = _usuarioRepository.Get(userId);
+            if (user == null)
+                return false;
+
+            if (!user.ValidatePassword(currentPassword))
+                return false;
+
+            user.SetPassword(newPassword);
+            var ok = _usuarioRepository.Update(user);
+            if (ok)
+                _usuarioRepository.SaveChanges();
+            return ok;
         }
     }
 }

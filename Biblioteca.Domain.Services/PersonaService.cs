@@ -23,9 +23,12 @@ namespace Biblioteca.Domain.Services
             _personaRepository.Add(persona);
             _personaRepository.SaveChanges();
 
+            // Recuperar la persona con Id asignado desde la DB, por DNI
+            var saved = _personaRepository.GetByDni(persona.Dni) ?? _personaRepository.GetAll().LastOrDefault(p => p.Dni == persona.Dni);
+
             return new PersonaDto
             {
-                Id = persona.Id,
+                Id = saved?.Id ?? persona.Id,
                 Nombre = persona.Nombre,
                 Apellido = persona.Apellido,
                 Dni = persona.Dni,

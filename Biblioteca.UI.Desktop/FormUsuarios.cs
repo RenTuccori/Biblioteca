@@ -28,7 +28,8 @@ namespace Biblioteca.UI.Desktop
             {
                 var usuarioSeleccionado = (UsuarioDto)dgvUsuarios.SelectedRows[0].DataBoundItem;
                 txtNombreUsuario.Text = usuarioSeleccionado.NombreUsuario;
-                txtClave.Text = usuarioSeleccionado.Clave;
+                // No exponer ni rellenar contraseña
+                txtClave.Clear();
                 cmbRol.SelectedItem = usuarioSeleccionado.Rol;
                 
                 // Buscar y mostrar datos de la persona
@@ -105,10 +106,9 @@ namespace Biblioteca.UI.Desktop
                     string.IsNullOrWhiteSpace(txtDni.Text) ||
                     string.IsNullOrWhiteSpace(txtEmail.Text) ||
                     string.IsNullOrWhiteSpace(txtNombreUsuario.Text) || 
-                    string.IsNullOrWhiteSpace(txtClave.Text) ||
                     cmbRol.SelectedItem == null)
                 {
-                    MessageBox.Show("Todos los campos son requeridos.", "Error de validación", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    MessageBox.Show("Complete los datos (la contraseña no es requerida para modificar).", "Error de validación", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     return;
                 }
 
@@ -126,14 +126,14 @@ namespace Biblioteca.UI.Desktop
                 
                 await _personaApiClient.UpdateAsync(personaDto);
 
-                // Actualizar el usuario
+                // Actualizar el usuario (sin contraseña)
                 var usuarioModificadoDto = new UsuarioDto 
                 { 
                     Id = usuarioSeleccionado.Id,
                     NombreUsuario = txtNombreUsuario.Text.Trim(),
-                    Clave = txtClave.Text,
                     Rol = cmbRol.SelectedItem.ToString()!,
-                    PersonaId = usuarioSeleccionado.PersonaId
+                    PersonaId = usuarioSeleccionado.PersonaId,
+                    PersonaNombreCompleto = $"{personaDto.Nombre} {personaDto.Apellido}"
                 };
                 
                 var resultado = await _usuarioApiClient.UpdateAsync(usuarioModificadoDto);
@@ -169,7 +169,6 @@ namespace Biblioteca.UI.Desktop
                 {
                     var usuarioSeleccionado = (UsuarioDto)dgvUsuarios.SelectedRows[0].DataBoundItem;
                     
-                    // Eliminar el usuario (esto debería manejar la cascada en la API)
                     var resultado = await _usuarioApiClient.DeleteAsync(usuarioSeleccionado.Id);
                     if (resultado)
                     {
@@ -196,7 +195,6 @@ namespace Biblioteca.UI.Desktop
                 await CargarPersonas();
                 await CargarUsuarios();
                 ConfigurarComboBoxes();
-                // Asegurar que todo quede vacío para ingreso del usuario
                 LimpiarCampos();
             }
             catch (Exception ex)
@@ -217,17 +215,13 @@ namespace Biblioteca.UI.Desktop
                 {
                     dgvUsuarios.Columns["Id"].HeaderText = "ID";
                     dgvUsuarios.Columns["NombreUsuario"].HeaderText = "Usuario";
-                    dgvUsuarios.Columns["Clave"].HeaderText = "Clave";
                     dgvUsuarios.Columns["Rol"].HeaderText = "Rol";
                     dgvUsuarios.Columns["PersonaId"].HeaderText = "ID Persona";
                     dgvUsuarios.Columns["PersonaNombreCompleto"].HeaderText = "Nombre Completo";
                     
-                    // Ocultar campos sensibles
-                    dgvUsuarios.Columns["Clave"].Visible = false;
                     dgvUsuarios.Columns["PersonaId"].Visible = false;
                 }
                 
-                // Limpiar la selección para que no se cargue automáticamente el primer elemento
                 dgvUsuarios.ClearSelection();
             }
             catch (Exception ex)
@@ -250,7 +244,6 @@ namespace Biblioteca.UI.Desktop
 
         private void ConfigurarComboBoxes()
         {
-            // Configurar combo de roles
             cmbRol.Items.Clear();
             cmbRol.Items.AddRange(new[] { "administrador", "bibliotecario", "socio" });
             cmbRol.SelectedIndex = -1;

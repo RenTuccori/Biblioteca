@@ -32,6 +32,12 @@ namespace Biblioteca.Data
             return personaEntity?.ToPersona();
         }
 
+        public Persona? GetByDni(string dni)
+        {
+            var personaEntity = _context.Personas.FirstOrDefault(p => p.Dni == dni);
+            return personaEntity?.ToPersona();
+        }
+
         public IEnumerable<Persona> GetAll()
         {
             return _context.Personas

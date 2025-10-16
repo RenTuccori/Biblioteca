@@ -1,4 +1,8 @@
-<Router AppAssembly="@typeof(App).Assembly">
+@using Biblioteca.API.Clients
+@inject IAuthService Auth
+@inject NavigationManager Nav
+
+<Router AppAssembly="@typeof(App).Assembly" OnNavigateAsync="GuardRoutesAsync">
     <Found Context="routeData">
         <RouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)" />
         <FocusOnNavigate RouteData="@routeData" Selector="h1" />
@@ -17,3 +21,25 @@
         </LayoutView>
     </NotFound>
 </Router>
+
+@code {
+    private static readonly HashSet<string> PublicRoutes = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "/", "/login"
+    };
+
+    private async Task GuardRoutesAsync(NavigationContext ctx)
+    {
+        var path = ctx.Path;
+        if (!path.StartsWith("/")) path = "/" + path;
+
+        if (!PublicRoutes.Contains(path))
+        {
+            var ok = await Auth.IsAuthenticatedAsync();
+            if (!ok)
+            {
+                Nav.NavigateTo("/login", forceLoad: true);
+            }
+        }
+    }
+}
