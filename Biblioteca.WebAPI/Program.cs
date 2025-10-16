@@ -70,8 +70,11 @@ builder.Services.AddAuthorization(options =>
             var policyName = $"{r}.{a}";
             options.AddPolicy(policyName, policy =>
             {
-                policy.RequireAssertion(ctx => ctx.User.HasClaim(c => c.Type == "permiso" && string.Equals(c.Value, policyName, StringComparison.OrdinalIgnoreCase))
-                                              || ctx.User.IsInRole("administrador"));
+                policy.RequireAssertion(ctx =>
+                    ctx.User.HasClaim(c => c.Type == "permiso" && string.Equals(c.Value, policyName, StringComparison.OrdinalIgnoreCase))
+                    || ctx.User.IsInRole("administrador")
+                    || ctx.User.IsInRole("bibliotecario")
+                );
             });
         }
     }
@@ -161,12 +164,23 @@ BEGIN
     INSERT INTO dbo.GrupoPermisos(GruposId, PermisosId)
         SELECT 1 AS GruposId, p.Id AS PermisosId FROM dbo.Permisos p;
 
-    -- socio: permisos de lectura de libros y préstamos únicamente
+    -- socio: permisos de lectura de libros y préstamos únicamente (configuración inicial)
     INSERT INTO dbo.GrupoPermisos(GruposId, PermisosId)
         SELECT 2 AS GruposId, p.Id AS PermisosId FROM dbo.Permisos p
         WHERE p.Nombre = 'leer' AND p.Categoria IN ('libros','prestamos');
 END";
     context.Database.ExecuteSqlRaw(seedSql);
+
+    // Asegurar que el grupo 'socio' (Id=2) tenga lectura de autores, generos y editoriales (idempotente)
+    var ensureSocioRead = @"
+INSERT INTO dbo.GrupoPermisos(GruposId, PermisosId)
+SELECT 2 AS GruposId, p.Id AS PermisosId
+FROM dbo.Permisos p
+WHERE p.Nombre = 'leer' AND p.Categoria IN ('autores','generos','editoriales')
+  AND NOT EXISTS (
+      SELECT 1 FROM dbo.GrupoPermisos gp WHERE gp.GruposId = 2 AND gp.PermisosId = p.Id
+  );";
+    context.Database.ExecuteSqlRaw(ensureSocioRead);
 }
 
 static void EnsureAdminRole(BibliotecaContext context)
@@ -335,7 +349,6 @@ app.MapGet("/api/libros/autor/{autorId}", (int autorId, LibroService s) => Resul
 app.MapGet("/api/libros/genero/{generoId}", (int generoId, LibroService s) => Results.Ok(s.GetByGenero(generoId))).RequireAuthorization("libros.leer").WithTags("Libros");
 app.MapGet("/api/libros/editorial/{editorialId}", (int editorialId, LibroService s) => Results.Ok(s.GetByEditorial(editorialId))).RequireAuthorization("libros.leer").WithTags("Libros");
 app.MapGet("/api/libros/estado/{estado}", (string estado, LibroService s) => Results.Ok(s.GetByEstado(estado))).RequireAuthorization("libros.leer").WithTags("Libros");
-
 
 // Endpoints para Préstamos
 app.MapGet("/api/prestamos", (HttpContext http, PrestamoService s) =>

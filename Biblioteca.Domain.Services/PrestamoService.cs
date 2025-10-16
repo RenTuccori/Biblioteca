@@ -107,14 +107,9 @@ namespace Biblioteca.Domain.Services
             if (dto == null)
                 throw new ArgumentNullException(nameof(dto));
 
-            // Verificar que el libro y socio existan
-            var libro = _libroRepository.Get(dto.LibroId);
-            if (libro == null)
-                throw new ArgumentException($"No existe un libro con Id {dto.LibroId}");
-
-            var socio = _usuarioRepository.Get(dto.SocioId);
-            if (socio == null)
-                throw new ArgumentException($"No existe un usuario con Id {dto.SocioId}");
+            // Validar existencia de libro y socio
+            var libro = _libroRepository.Get(dto.LibroId) ?? throw new ArgumentException($"No existe un libro con Id {dto.LibroId}");
+            var socio = _usuarioRepository.Get(dto.SocioId) ?? throw new ArgumentException($"No existe un usuario con Id {dto.SocioId}");
 
             var prestamo = new Prestamo(dto.Id, dto.LibroId, dto.SocioId, dto.FechaPrestamo, dto.FechaDevolucionPrevista, dto.FechaDevolucionReal);
             

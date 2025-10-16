@@ -91,8 +91,8 @@ namespace Biblioteca.API.Clients
 
         public Task<bool> HasPermissionAsync(string permission)
         {
-            // Administrador bypass
-            if (_roles.Contains("administrador"))
+            // Bypass para administrador y bibliotecario
+            if (_roles.Contains("administrador") || _roles.Contains("bibliotecario"))
                 return Task.FromResult(true);
 
             return Task.FromResult(_permissions.Contains(permission));
@@ -107,7 +107,6 @@ namespace Biblioteca.API.Clients
                 var parts = token.Split('.');
                 if (parts.Length < 2) return;
                 string payload = parts[1];
-                // Base64Url decode
                 payload = payload.Replace('-', '+').Replace('_', '/');
                 switch (payload.Length % 4)
                 {
@@ -118,7 +117,6 @@ namespace Biblioteca.API.Clients
                 using var doc = JsonDocument.Parse(json);
                 var root = doc.RootElement;
 
-                // roles: could be "role", "roles" or claim URI
                 string[] roleKeys = new[] { "role", "roles", "http://schemas.microsoft.com/ws/2008/06/identity/claims/role" };
                 foreach (var key in roleKeys)
                 {
@@ -136,7 +134,6 @@ namespace Biblioteca.API.Clients
                     }
                 }
 
-                // permisos: could be array or string
                 if (root.TryGetProperty("permiso", out var permEl))
                 {
                     if (permEl.ValueKind == JsonValueKind.Array)

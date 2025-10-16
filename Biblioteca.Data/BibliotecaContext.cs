@@ -204,8 +204,8 @@ namespace Biblioteca.Data
             {
                 grupoPermisos.Add(new Dictionary<string, object> { ["GruposId"] = 1, ["PermisosId"] = pid });
             }
-            // socio: permisos de lectura básicos (solo libros y préstamos)
-            var lecturaCategorias = new[] { "libros", "prestamos" };
+            // socio: permisos de lectura básicos (libros, préstamos, autores, géneros y editoriales)
+            var lecturaCategorias = new[] { "libros", "prestamos", "autores", "generos", "editoriales" };
             foreach (var p in permisos.Where(p => p.Nombre == "leer" && lecturaCategorias.Contains(p.Categoria)))
             {
                 grupoPermisos.Add(new Dictionary<string, object> { ["GruposId"] = 2, ["PermisosId"] = p.Id });

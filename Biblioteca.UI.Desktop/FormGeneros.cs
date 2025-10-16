@@ -6,27 +6,46 @@ namespace Biblioteca.UI.Desktop
     public partial class FormGeneros : Form
     {
         private readonly GeneroApiClient _generoApiClient;
+        private readonly IAuthService _auth;
 
-        public FormGeneros(GeneroApiClient generoApiClient)
+        public FormGeneros(GeneroApiClient generoApiClient, IAuthService auth)
         {
             InitializeComponent();
             _generoApiClient = generoApiClient;
+            _auth = auth;
         }
 
         private async void FormGenero_Load(object sender, EventArgs e)
         {
+            await AplicarPermisosAsync();
             await CargarGeneros();
+        }
+
+        private async Task AplicarPermisosAsync()
+        {
+            var puedeLeer = await _auth.HasPermissionAsync("generos.leer");
+            var puedeAgregar = await _auth.HasPermissionAsync("generos.agregar");
+            var puedeActualizar = await _auth.HasPermissionAsync("generos.actualizar");
+            var puedeEliminar = await _auth.HasPermissionAsync("generos.eliminar");
+
+            // Si no puede leer, cerrar
+            if (!puedeLeer)
+            {
+                MessageBox.Show("No tiene permiso para ver géneros.", "Permisos", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                Close();
+                return;
+            }
+
+            btnAgregar.Enabled = puedeAgregar;
+            btnModificar.Enabled = puedeActualizar;
+            btnEliminar.Enabled = puedeEliminar;
         }
 
         private void dgvGeneros_SelectionChanged(object sender, EventArgs e)
         {
-            // Verificamos si hay alguna fila seleccionada.
             if (dgvGeneros.SelectedRows.Count > 0)
             {
-                // Obtenemos el objeto DTO de la fila seleccionada.
                 var generoSeleccionado = (GeneroDto)dgvGeneros.SelectedRows[0].DataBoundItem;
-
-                // Ponemos el nombre del género en el TextBox para que el usuario pueda editarlo.
                 txtNombreGenero.Text = generoSeleccionado.Nombre;
             }
         }
@@ -69,23 +88,19 @@ namespace Biblioteca.UI.Desktop
                     return;
                 }
 
-                // 1. Obtenemos el DTO del género seleccionado.
                 var generoSeleccionado = (GeneroDto)dgvGeneros.SelectedRows[0].DataBoundItem;
-
-                // 2. Creamos un DTO con el ID original y el nuevo nombre del TextBox.
-                var generoModificadoDto = new GeneroDto 
-                { 
-                    Id = generoSeleccionado.Id, 
+                var generoModificadoDto = new GeneroDto
+                {
+                    Id = generoSeleccionado.Id,
                     Nombre = txtNombreGenero.Text.Trim()
                 };
 
-                // 3. Llamamos al cliente API de actualización.
                 bool resultado = await _generoApiClient.UpdateAsync(generoModificadoDto);
 
                 if (resultado)
                 {
                     MessageBox.Show("Género modificado con éxito.", "Éxito", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                    await CargarGeneros(); // Refrescamos la grilla.
+                    await CargarGeneros();
                     txtNombreGenero.Clear();
                 }
                 else
@@ -107,7 +122,6 @@ namespace Biblioteca.UI.Desktop
                 return;
             }
 
-            // Pedimos confirmación antes de una acción destructiva.
             var confirmacion = MessageBox.Show("¿Está seguro de que desea eliminar este género?", "Confirmar eliminación", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
 
             if (confirmacion == DialogResult.Yes)
@@ -143,11 +157,7 @@ namespace Biblioteca.UI.Desktop
 
                 dgvGeneros.DataSource = null;
                 dgvGeneros.DataSource = generosDto;
-                
-                // Limpiar la selección para que no se cargue automáticamente el primer elemento
                 dgvGeneros.ClearSelection();
-
-                // Dejar campo de entrada vacío al iniciar
                 LimpiarCampos();
             }
             catch (Exception ex)

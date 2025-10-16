@@ -94,7 +94,13 @@ namespace Biblioteca.API.Clients
             var content = new StringContent("", Encoding.UTF8, "application/json");
             var url = $"api/prestamos/{id}/devolver" + (fechaDevolucion.HasValue ? $"?fechaDevolucion={fechaDevolucion.Value:O}" : "");
             var response = await client.PostAsync(url, content);
-            return response.IsSuccessStatusCode;
+            if (!response.IsSuccessStatusCode)
+            {
+                var body = await response.Content.ReadAsStringAsync();
+                var message = string.IsNullOrWhiteSpace(body) ? response.ReasonPhrase : body;
+                throw new Exception(message);
+            }
+            return true;
         }
     }
 }
