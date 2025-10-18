@@ -39,9 +39,16 @@ namespace Biblioteca.Domain.Services
             _prestamoRepository.Add(prestamo);
             _prestamoRepository.SaveChanges();
 
+            // Recuperar el préstamo persistido para obtener el Id asignado
+            var saved = _prestamoRepository.GetAll()
+                .LastOrDefault(p => p.LibroId == dto.LibroId 
+                                  && p.SocioId == dto.SocioId 
+                                  && p.FechaPrestamo == dto.FechaPrestamo 
+                                  && p.FechaDevolucionPrevista == dto.FechaDevolucionPrevista);
+
             return new PrestamoDto
             {
-                Id = prestamo.Id,
+                Id = saved?.Id ?? prestamo.Id,
                 LibroId = prestamo.LibroId,
                 SocioId = prestamo.SocioId,
                 FechaPrestamo = prestamo.FechaPrestamo,

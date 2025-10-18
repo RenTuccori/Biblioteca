@@ -25,26 +25,24 @@ namespace Biblioteca.Domain.Services
                 throw new ArgumentNullException(nameof(dto));
 
             // Verificar que el autor, género y editorial existan
-            var autor = _autorRepository.Get(dto.AutorId);
-            if (autor == null)
-                throw new ArgumentException($"No existe un autor con Id {dto.AutorId}");
-
-            var genero = _generoRepository.Get(dto.GeneroId);
-            if (genero == null)
-                throw new ArgumentException($"No existe un género con Id {dto.GeneroId}");
-
-            var editorial = _editorialRepository.Get(dto.EditorialId);
-            if (editorial == null)
-                throw new ArgumentException($"No existe una editorial con Id {dto.EditorialId}");
+            var autor = _autorRepository.Get(dto.AutorId) ?? throw new ArgumentException($"No existe un autor con Id {dto.AutorId}");
+            var genero = _generoRepository.Get(dto.GeneroId) ?? throw new ArgumentException($"No existe un género con Id {dto.GeneroId}");
+            var editorial = _editorialRepository.Get(dto.EditorialId) ?? throw new ArgumentException($"No existe una editorial con Id {dto.EditorialId}");
 
             var libro = new Libro(0, dto.Titulo, dto.ISBN, dto.AutorId, dto.GeneroId, dto.EditorialId, dto.Estado);
             
             _libroRepository.Add(libro);
             _libroRepository.SaveChanges();
 
+            var saved = _libroRepository.GetAll().LastOrDefault(l => string.Equals(l.Titulo, dto.Titulo, StringComparison.Ordinal)
+                                                                 && string.Equals(l.ISBN, dto.ISBN, StringComparison.Ordinal)
+                                                                 && l.AutorId == dto.AutorId
+                                                                 && l.GeneroId == dto.GeneroId
+                                                                 && l.EditorialId == dto.EditorialId);
+
             return new LibroDto
             {
-                Id = libro.Id,
+                Id = saved?.Id ?? libro.Id,
                 Titulo = libro.Titulo,
                 ISBN = libro.ISBN,
                 AutorId = libro.AutorId,
@@ -109,18 +107,9 @@ namespace Biblioteca.Domain.Services
             if (dto == null)
                 throw new ArgumentNullException(nameof(dto));
 
-            // Verificar que el autor, género y editorial existan
-            var autor = _autorRepository.Get(dto.AutorId);
-            if (autor == null)
-                throw new ArgumentException($"No existe un autor con Id {dto.AutorId}");
-
-            var genero = _generoRepository.Get(dto.GeneroId);
-            if (genero == null)
-                throw new ArgumentException($"No existe un género con Id {dto.GeneroId}");
-
-            var editorial = _editorialRepository.Get(dto.EditorialId);
-            if (editorial == null)
-                throw new ArgumentException($"No existe una editorial con Id {dto.EditorialId}");
+            var autor = _autorRepository.Get(dto.AutorId) ?? throw new ArgumentException($"No existe un autor con Id {dto.AutorId}");
+            var genero = _generoRepository.Get(dto.GeneroId) ?? throw new ArgumentException($"No existe un género con Id {dto.GeneroId}");
+            var editorial = _editorialRepository.Get(dto.EditorialId) ?? throw new ArgumentException($"No existe una editorial con Id {dto.EditorialId}");
 
             var libro = new Libro(dto.Id, dto.Titulo, dto.ISBN, dto.AutorId, dto.GeneroId, dto.EditorialId, dto.Estado);
             

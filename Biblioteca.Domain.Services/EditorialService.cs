@@ -23,9 +23,11 @@ namespace Biblioteca.Domain.Services
             _editorialRepository.Add(editorial);
             _editorialRepository.SaveChanges();
 
+            var saved = _editorialRepository.GetAll().LastOrDefault(e => string.Equals(e.Nombre, dto.Nombre, StringComparison.Ordinal));
+
             return new EditorialDto
             {
-                Id = editorial.Id,
+                Id = saved?.Id ?? editorial.Id,
                 Nombre = editorial.Nombre
             };
         }

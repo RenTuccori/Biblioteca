@@ -12,9 +12,17 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddRazorPages();
 
-// Configurar Entity Framework con SQL Server
-builder.Services.AddDbContext<BibliotecaContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+// Configurar Entity Framework con proveedor según ambiente
+if (builder.Environment.IsEnvironment("Testing"))
+{
+    builder.Services.AddDbContext<BibliotecaContext>(options =>
+        options.UseInMemoryDatabase("Biblioteca_TestDB"));
+}
+else
+{
+    builder.Services.AddDbContext<BibliotecaContext>(options =>
+        options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+}
 
 // Registrar repositorios
 builder.Services.AddScoped<AutorRepository>();
@@ -39,7 +47,9 @@ builder.Services.AddScoped<AuthService>();
 
 // JWT Authentication
 var jwtSection = builder.Configuration.GetSection("JwtSettings");
-var secretKey = jwtSection["SecretKey"] ?? throw new InvalidOperationException("JwtSettings:SecretKey no configurado");
+var secretKey = builder.Environment.IsEnvironment("Testing")
+    ? "test-secret-key-12345678901234567890"
+    : (jwtSection["SecretKey"] ?? throw new InvalidOperationException("JwtSettings:SecretKey no configurado"));
 var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey));
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -49,9 +59,9 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         {
             ValidateIssuerSigningKey = true,
             IssuerSigningKey = key,
-            ValidateIssuer = true,
+            ValidateIssuer = !builder.Environment.IsEnvironment("Testing"),
             ValidIssuer = jwtSection["Issuer"],
-            ValidateAudience = true,
+            ValidateAudience = !builder.Environment.IsEnvironment("Testing"),
             ValidAudience = jwtSection["Audience"],
             ValidateLifetime = true,
             ClockSkew = TimeSpan.Zero,
@@ -108,11 +118,15 @@ using (var scope = app.Services.CreateScope())
     // Crea DB si no existe
     context.Database.EnsureCreated();
 
-    // Asegurar que existan tablas de unión si la DB es previa
-    EnsureJoinTables(context);
+    // En Testing (InMemory) evitar SQL crudo
+    if (!app.Environment.IsEnvironment("Testing"))
+    {
+        // Asegurar que existan tablas de unión si la DB es previa
+        EnsureJoinTables(context);
 
-    // Asegurar que la cuenta admin tenga rol 'administrador'
-    EnsureAdminRole(context);
+        // Asegurar que la cuenta admin tenga rol 'administrador'
+        EnsureAdminRole(context);
+    }
 }
 
 static void EnsureJoinTables(BibliotecaContext context)
@@ -407,3 +421,8 @@ app.MapGet("/api/prestamos/vencidos", (HttpContext http, PrestamoService s) =>
 app.MapPost("/api/prestamos/{id}/devolver", (int id, DateTime? fechaDevolucion, PrestamoService s) => { try { var fecha = fechaDevolucion ?? DateTime.Now; var ok = s.DevolverLibro(id, fecha); return ok ? Results.Ok() : Results.NotFound(); } catch (Exception ex) { return Results.BadRequest(ex.Message);} }).RequireAuthorization("prestamos.actualizar").WithTags("Préstamos");
 
 app.Run();
+
+namespace Biblioteca.WebAPI
+{
+    public partial class Program { }
+}
