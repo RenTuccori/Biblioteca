@@ -1,0 +1,309 @@
+@page "/reportes"
+@using Biblioteca.API.Clients
+@using Biblioteca.DTOs
+@using System.Text.Json
+@inject ReporteApiClient ReporteClient
+@inject IAuthService Auth
+@inject IJSRuntime JSRuntime
+
+<PageTitle>Reportes - Biblioteca</PageTitle>
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="h3 mb-0 text-gray-800">Reportes de Préstamos</h1>
+            </div>
+
+            <!-- Formulario para selección de fechas -->
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Filtros de Reporte</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label for="fechaInicio">Fecha Inicio:</label>
+                                <input type="date" id="fechaInicio" class="form-control" @bind="fechaInicio" />
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label for="fechaFin">Fecha Fin:</label>
+                                <input type="date" id="fechaFin" class="form-control" @bind="fechaFin" />
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label>&nbsp;</label>
+                                <div>
+                                    <button type="button" class="btn btn-primary me-2" @onclick="GenerarReporte" disabled="@isLoading">
+                                        @if (isLoading)
+                                        {
+                                            <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                        }
+                                        <i class="fas fa-search me-1"></i> Generar Reporte
+                                    </button>
+                                    @if (reporteGenerado)
+                                    {
+                                        <button type="button" class="btn btn-success" @onclick="DescargarPDF" disabled="@isDownloading">
+                                            @if (isDownloading)
+                                            {
+                                                <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                            }
+                                            <i class="fas fa-download me-1"></i> Descargar PDF
+                                        </button>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            @if (!string.IsNullOrEmpty(errorMessage))
+            {
+                <div class="alert alert-danger" role="alert">
+                    <i class="fas fa-exclamation-triangle me-2"></i>@errorMessage
+                </div>
+            }
+
+            @if (reporteGenerado)
+            {
+                <!-- Estadísticas -->
+                <div class="row mb-4">
+                    <div class="col-xl-3 col-md-6 mb-4">
+                        <div class="card border-left-primary shadow h-100 py-2">
+                            <div class="card-body">
+                                <div class="row no-gutters align-items-center">
+                                    <div class="col mr-2">
+                                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Total Préstamos</div>
+                                        <div class="h5 mb-0 font-weight-bold text-gray-800">@(estadisticas.ContainsKey("TotalPrestamos") ? estadisticas["TotalPrestamos"] : 0)</div>
+                                    </div>
+                                    <div class="col-auto">
+                                        <i class="fas fa-book fa-2x text-gray-300"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-xl-3 col-md-6 mb-4">
+                        <div class="card border-left-success shadow h-100 py-2">
+                            <div class="card-body">
+                                <div class="row no-gutters align-items-center">
+                                    <div class="col mr-2">
+                                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Devueltos</div>
+                                        <div class="h5 mb-0 font-weight-bold text-gray-800">@(estadisticas.ContainsKey("Devueltos") ? estadisticas["Devueltos"] : 0)</div>
+                                    </div>
+                                    <div class="col-auto">
+                                        <i class="fas fa-check-circle fa-2x text-gray-300"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-xl-3 col-md-6 mb-4">
+                        <div class="card border-left-info shadow h-100 py-2">
+                            <div class="card-body">
+                                <div class="row no-gutters align-items-center">
+                                    <div class="col mr-2">
+                                        <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Activos</div>
+                                        <div class="h5 mb-0 font-weight-bold text-gray-800">@(estadisticas.ContainsKey("Activos") ? estadisticas["Activos"] : 0)</div>
+                                    </div>
+                                    <div class="col-auto">
+                                        <i class="fas fa-clock fa-2x text-gray-300"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-xl-3 col-md-6 mb-4">
+                        <div class="card border-left-warning shadow h-100 py-2">
+                            <div class="card-body">
+                                <div class="row no-gutters align-items-center">
+                                    <div class="col mr-2">
+                                        <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Vencidos</div>
+                                        <div class="h5 mb-0 font-weight-bold text-gray-800">@(estadisticas.ContainsKey("Vencidos") ? estadisticas["Vencidos"] : 0)</div>
+                                    </div>
+                                    <div class="col-auto">
+                                        <i class="fas fa-exclamation-triangle fa-2x text-gray-300"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tabla de resultados -->
+                <div class="card shadow mb-4">
+                    <div class="card-header py-3">
+                        <h6 class="m-0 font-weight-bold text-primary">
+                            Detalle de Préstamos (@fechaInicio.ToString("dd/MM/yyyy") - @fechaFin.ToString("dd/MM/yyyy"))
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        @if (prestamos?.Any() == true)
+                        {
+                            <div class="table-responsive">
+                                <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+                                    <thead>
+                                        <tr>
+                                            <th>ID</th>
+                                            <th>Libro</th>
+                                            <th>Autor</th>
+                                            <th>Socio</th>
+                                            <th>Fecha Préstamo</th>
+                                            <th>Fecha Devolución Prevista</th>
+                                            <th>Fecha Devolución Real</th>
+                                            <th>Estado</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var prestamo in prestamos)
+                                        {
+                                            <tr>
+                                                <td>@prestamo.PrestamoId</td>
+                                                <td>@prestamo.LibroTitulo</td>
+                                                <td>@prestamo.AutorNombre</td>
+                                                <td>@prestamo.SocioNombre</td>
+                                                <td>@prestamo.FechaPrestamo.ToString("dd/MM/yyyy")</td>
+                                                <td>@prestamo.FechaDevolucionPrevista.ToString("dd/MM/yyyy")</td>
+                                                <td>@(prestamo.FechaDevolucionReal?.ToString("dd/MM/yyyy") ?? "-")</td>
+                                                <td>
+                                                    @if (prestamo.Estado == "Devuelto")
+                                                    {
+                                                        <span class="badge bg-success">@prestamo.Estado</span>
+                                                    }
+                                                    else if (prestamo.Estado == "Vencido")
+                                                    {
+                                                        <span class="badge bg-danger">@prestamo.Estado</span>
+                                                    }
+                                                    else
+                                                    {
+                                                        <span class="badge bg-info">@prestamo.Estado</span>
+                                                    }
+                                                </td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="text-center py-4">
+                                <i class="fas fa-search fa-3x text-gray-300 mb-3"></i>
+                                <p class="text-muted">No se encontraron préstamos en el rango de fechas seleccionado.</p>
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    private DateTime fechaInicio = DateTime.Now.AddMonths(-1);
+    private DateTime fechaFin = DateTime.Now;
+    private bool isLoading = false;
+    private bool isDownloading = false;
+    private bool reporteGenerado = false;
+    private string errorMessage = string.Empty;
+    
+    private IEnumerable<ReportePrestamosDto>? prestamos;
+    private Dictionary<string, int> estadisticas = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Verificar que el usuario tiene permisos
+        var hasPermission = await Auth.HasPermissionAsync("prestamos.leer");
+        var isSocio = await Auth.IsInRoleAsync("socio");
+        
+        if (!hasPermission || isSocio)
+        {
+            errorMessage = "No tiene permisos para acceder a los reportes.";
+            return;
+        }
+    }
+
+    private async Task GenerarReporte()
+    {
+        try
+        {
+            isLoading = true;
+            errorMessage = string.Empty;
+            
+            if (fechaInicio > fechaFin)
+            {
+                errorMessage = "La fecha de inicio no puede ser mayor a la fecha de fin.";
+                return;
+            }
+
+            var (prestamosResult, estadisticasResult) = await ReporteClient.GetPrestamosPorFechasAsync(fechaInicio, fechaFin);
+            
+            prestamos = prestamosResult;
+            estadisticas = estadisticasResult;
+            reporteGenerado = true;
+        }
+        catch (UnauthorizedAccessException)
+        {
+            errorMessage = "Su sesión ha expirado. Por favor, inicie sesión nuevamente.";
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error al generar el reporte: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task DescargarPDF()
+    {
+        try
+        {
+            isDownloading = true;
+            
+            if (prestamos == null || !prestamos.Any())
+            {
+                errorMessage = "No hay datos para generar el PDF.";
+                return;
+            }
+
+            var reporteData = new
+            {
+                FechaInicio = fechaInicio.ToString("dd/MM/yyyy"),
+                FechaFin = fechaFin.ToString("dd/MM/yyyy"),
+                FechaGeneracion = DateTime.Now.ToString("dd/MM/yyyy HH:mm"),
+                Estadisticas = estadisticas,
+                Prestamos = prestamos.Select(p => new
+                {
+                    p.PrestamoId,
+                    p.LibroTitulo,
+                    p.AutorNombre,
+                    p.SocioNombre,
+                    FechaPrestamo = p.FechaPrestamo.ToString("dd/MM/yyyy"),
+                    FechaDevolucionPrevista = p.FechaDevolucionPrevista.ToString("dd/MM/yyyy"),
+                    FechaDevolucionReal = p.FechaDevolucionReal?.ToString("dd/MM/yyyy") ?? "-",
+                    p.Estado
+                })
+            };
+
+            await JSRuntime.InvokeVoidAsync("downloadPDF", JsonSerializer.Serialize(reporteData));
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error al descargar el PDF: {ex.Message}";
+        }
+        finally
+        {
+            isDownloading = false;
+        }
+    }
+}

@@ -92,6 +92,11 @@ namespace Biblioteca.Blazor.WebAssembly.Services
             return Task.FromResult(_permissions.Contains(permission));
         }
 
+        public Task<bool> IsInRoleAsync(string role)
+        {
+            return Task.FromResult(_roles.Contains(role));
+        }
+
         private async Task PersistAsync()
         {
             try

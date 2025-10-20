@@ -59,6 +59,12 @@ builder.Services.AddHttpClient<AuthApiClient>(client =>
     client.DefaultRequestHeaders.Add("Accept", "application/json");
 });
 
+builder.Services.AddHttpClient<ReporteApiClient>(client =>
+{
+    client.BaseAddress = new Uri(apiBaseUrl);
+    client.DefaultRequestHeaders.Add("Accept", "application/json");
+});
+
 builder.Services.AddSingleton<IAuthService, SimpleAuthService>();
 
 var app = builder.Build();
