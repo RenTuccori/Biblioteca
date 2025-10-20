@@ -6,8 +6,10 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
 
-// Configurar HttpClient para API
-var apiBaseUrl = "https://localhost:7152/";
+// Configurar HttpClient para API (configurable)
+var apiBaseUrl = builder.Configuration["ApiBaseUrl"]
+                  ?? Environment.GetEnvironmentVariable("API_BASE_URL")
+                  ?? "https://localhost:7152/";
 
 builder.Services.AddHttpClient<AutorApiClient>(client =>
 {

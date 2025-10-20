@@ -30,12 +30,15 @@ namespace Biblioteca.Domain.Services
             _usuarioRepository.Add(usuario);
             _usuarioRepository.SaveChanges();
 
+            // Recuperar el Id asignado utilizando el nombre de usuario (único)
+            var saved = _usuarioRepository.GetByNombreUsuario(dto.NombreUsuario);
+
             return new UsuarioDto
             {
-                Id = usuario.Id,
-                NombreUsuario = usuario.NombreUsuario,
-                Rol = usuario.Rol,
-                PersonaId = usuario.PersonaId,
+                Id = saved?.Id ?? usuario.Id,
+                NombreUsuario = saved?.NombreUsuario ?? usuario.NombreUsuario,
+                Rol = saved?.Rol ?? usuario.Rol,
+                PersonaId = saved?.PersonaId ?? usuario.PersonaId,
                 PersonaNombreCompleto = $"{persona.Nombre} {persona.Apellido}"
             };
         }
