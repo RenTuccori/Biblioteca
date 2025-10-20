@@ -7,14 +7,16 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Swashbuckle.AspNetCore" Version="9.0.3" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="9.0.8" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="9.0.8" />
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.5.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.7" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Biblioteca.Domain.Model\Biblioteca.Domain.Model.csproj" />
+    <ProjectReference Include="..\Biblioteca.Data\Biblioteca.Data.csproj" />
     <ProjectReference Include="..\Biblioteca.Domain.Services\Biblioteca.Domain.Services.csproj" />
     <ProjectReference Include="..\Biblioteca.DTOs\Biblioteca.DTOs.csproj" />
-    <ProjectReference Include="..\Biblioteca.Data\Biblioteca.Data.csproj" />
   </ItemGroup>
 
 </Project>

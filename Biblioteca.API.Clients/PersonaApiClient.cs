@@ -4,100 +4,88 @@ using System.Text.Json;
 
 namespace Biblioteca.API.Clients
 {
-    public class PersonaApiClient
+    public class PersonaApiClient : BaseApiClient
     {
         private readonly HttpClient _httpClient;
         private readonly JsonSerializerOptions _jsonOptions;
 
-        public PersonaApiClient(HttpClient httpClient)
+        public PersonaApiClient(HttpClient httpClient) : base(httpClient)
         {
             _httpClient = httpClient;
-            _jsonOptions = new JsonSerializerOptions
-            {
-                PropertyNameCaseInsensitive = true
-            };
+            _jsonOptions = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
         }
 
         public async Task<IEnumerable<PersonaDto>> GetAllAsync()
         {
-            try
-            {
-                var response = await _httpClient.GetAsync("api/personas");
-                response.EnsureSuccessStatusCode();
-
-                var json = await response.Content.ReadAsStringAsync();
-                return JsonSerializer.Deserialize<IEnumerable<PersonaDto>>(json, _jsonOptions) ?? new List<PersonaDto>();
-            }
-            catch (HttpRequestException ex)
-            {
-                throw new Exception($"Error al obtener personas: {ex.Message}", ex);
-            }
+            var client = await CreateHttpClientAsync();
+            var response = await client.GetAsync("api/personas");
+            response.EnsureSuccessStatusCode();
+            var json = await response.Content.ReadAsStringAsync();
+            return JsonSerializer.Deserialize<IEnumerable<PersonaDto>>(json, _jsonOptions) ?? new List<PersonaDto>();
         }
 
         public async Task<PersonaDto?> GetByIdAsync(int id)
         {
-            try
-            {
-                var response = await _httpClient.GetAsync($"api/personas/{id}");
-                if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
-                    return null;
+            var client = await CreateHttpClientAsync();
+            var response = await client.GetAsync($"api/personas/{id}");
+            if (response.StatusCode == System.Net.HttpStatusCode.NotFound) return null;
+            response.EnsureSuccessStatusCode();
+            var json = await response.Content.ReadAsStringAsync();
+            return JsonSerializer.Deserialize<PersonaDto>(json, _jsonOptions);
+        }
 
-                response.EnsureSuccessStatusCode();
-                var json = await response.Content.ReadAsStringAsync();
-                return JsonSerializer.Deserialize<PersonaDto>(json, _jsonOptions);
-            }
-            catch (HttpRequestException ex)
-            {
-                throw new Exception($"Error al obtener persona {id}: {ex.Message}", ex);
-            }
+        public async Task<IEnumerable<PersonaDto>> GetByCriteriaAsync(string texto)
+        {
+            var client = await CreateHttpClientAsync();
+            var encodedTexto = Uri.EscapeDataString(texto ?? "");
+            var response = await client.GetAsync($"api/personas/criteria?texto={encodedTexto}");
+            response.EnsureSuccessStatusCode();
+            var json = await response.Content.ReadAsStringAsync();
+            return JsonSerializer.Deserialize<IEnumerable<PersonaDto>>(json, _jsonOptions) ?? new List<PersonaDto>();
         }
 
         public async Task<PersonaDto> CreateAsync(CrearPersonaDto persona)
         {
-            try
+            var client = await CreateHttpClientAsync();
+            var json = JsonSerializer.Serialize(persona, _jsonOptions);
+            var content = new StringContent(json, Encoding.UTF8, "application/json");
+            var response = await client.PostAsync("api/personas", content);
+            if (!response.IsSuccessStatusCode)
             {
-                var json = JsonSerializer.Serialize(persona, _jsonOptions);
-                var content = new StringContent(json, Encoding.UTF8, "application/json");
-
-                var response = await _httpClient.PostAsync("api/personas", content);
-                response.EnsureSuccessStatusCode();
-
-                var responseJson = await response.Content.ReadAsStringAsync();
-                return JsonSerializer.Deserialize<PersonaDto>(responseJson, _jsonOptions)!;
+                var body = await response.Content.ReadAsStringAsync();
+                var message = string.IsNullOrWhiteSpace(body) ? response.ReasonPhrase : body;
+                throw new Exception(message);
             }
-            catch (HttpRequestException ex)
-            {
-                throw new Exception($"Error al crear persona: {ex.Message}", ex);
-            }
+            var responseJson = await response.Content.ReadAsStringAsync();
+            return JsonSerializer.Deserialize<PersonaDto>(responseJson, _jsonOptions)!;
         }
 
         public async Task<bool> UpdateAsync(PersonaDto persona)
         {
-            try
+            var client = await CreateHttpClientAsync();
+            var json = JsonSerializer.Serialize(persona, _jsonOptions);
+            var content = new StringContent(json, Encoding.UTF8, "application/json");
+            var response = await client.PutAsync("api/personas", content);
+            if (!response.IsSuccessStatusCode)
             {
-                var json = JsonSerializer.Serialize(persona, _jsonOptions);
-                var content = new StringContent(json, Encoding.UTF8, "application/json");
-
-                var response = await _httpClient.PutAsync("api/personas", content);
-                return response.IsSuccessStatusCode;
+                var body = await response.Content.ReadAsStringAsync();
+                var message = string.IsNullOrWhiteSpace(body) ? response.ReasonPhrase : body;
+                throw new Exception(message);
             }
-            catch (HttpRequestException ex)
-            {
-                throw new Exception($"Error al actualizar persona: {ex.Message}", ex);
-            }
+            return true;
         }
 
         public async Task<bool> DeleteAsync(int id)
         {
-            try
+            var client = await CreateHttpClientAsync();
+            var response = await client.DeleteAsync($"api/personas/{id}");
+            if (!response.IsSuccessStatusCode)
             {
-                var response = await _httpClient.DeleteAsync($"api/personas/{id}");
-                return response.IsSuccessStatusCode;
+                var body = await response.Content.ReadAsStringAsync();
+                var message = string.IsNullOrWhiteSpace(body) ? response.ReasonPhrase : body;
+                throw new Exception(message);
             }
-            catch (HttpRequestException ex)
-            {
-                throw new Exception($"Error al eliminar persona {id}: {ex.Message}", ex);
-            }
+            return true;
         }
     }
 }

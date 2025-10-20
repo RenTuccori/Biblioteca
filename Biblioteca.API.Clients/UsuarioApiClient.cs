@@ -4,12 +4,12 @@ using System.Text.Json;
 
 namespace Biblioteca.API.Clients
 {
-    public class UsuarioApiClient
+    public class UsuarioApiClient : BaseApiClient
     {
         private readonly HttpClient _httpClient;
         private readonly JsonSerializerOptions _jsonOptions;
 
-        public UsuarioApiClient(HttpClient httpClient)
+        public UsuarioApiClient(HttpClient httpClient) : base(httpClient)
         {
             _httpClient = httpClient;
             _jsonOptions = new JsonSerializerOptions
@@ -22,7 +22,8 @@ namespace Biblioteca.API.Clients
         {
             try
             {
-                var response = await _httpClient.GetAsync("api/usuarios");
+                var client = await CreateHttpClientAsync();
+                var response = await client.GetAsync("api/usuarios");
                 response.EnsureSuccessStatusCode();
 
                 var json = await response.Content.ReadAsStringAsync();
@@ -38,7 +39,8 @@ namespace Biblioteca.API.Clients
         {
             try
             {
-                var response = await _httpClient.GetAsync($"api/usuarios/{id}");
+                var client = await CreateHttpClientAsync();
+                var response = await client.GetAsync($"api/usuarios/{id}");
                 if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
                     return null;
 
@@ -56,7 +58,8 @@ namespace Biblioteca.API.Clients
         {
             try
             {
-                var response = await _httpClient.GetAsync($"api/usuarios/rol/{rol}");
+                var client = await CreateHttpClientAsync();
+                var response = await client.GetAsync($"api/usuarios/rol/{rol}");
                 response.EnsureSuccessStatusCode();
 
                 var json = await response.Content.ReadAsStringAsync();
@@ -72,8 +75,9 @@ namespace Biblioteca.API.Clients
         {
             try
             {
+                var client = await CreateHttpClientAsync();
                 var encodedTexto = Uri.EscapeDataString(texto ?? "");
-                var response = await _httpClient.GetAsync($"api/usuarios/criteria?texto={encodedTexto}");
+                var response = await client.GetAsync($"api/usuarios/criteria?texto={encodedTexto}");
                 response.EnsureSuccessStatusCode();
 
                 var json = await response.Content.ReadAsStringAsync();
@@ -89,11 +93,19 @@ namespace Biblioteca.API.Clients
         {
             try
             {
+                var client = await CreateHttpClientAsync();
                 var json = JsonSerializer.Serialize(usuario, _jsonOptions);
                 var content = new StringContent(json, Encoding.UTF8, "application/json");
 
-                var response = await _httpClient.PostAsync("api/usuarios", content);
-                response.EnsureSuccessStatusCode();
+                var response = await client.PostAsync("api/usuarios", content);
+                if (!response.IsSuccessStatusCode)
+                {
+                    var body = await response.Content.ReadAsStringAsync();
+                    if (response.StatusCode == System.Net.HttpStatusCode.Forbidden)
+                        throw new Exception("No tiene permisos suficientes para realizar esta acción.");
+                    var message = string.IsNullOrWhiteSpace(body) ? response.ReasonPhrase : body;
+                    throw new Exception(message);
+                }
 
                 var responseJson = await response.Content.ReadAsStringAsync();
                 return JsonSerializer.Deserialize<UsuarioDto>(responseJson, _jsonOptions)!;
@@ -108,11 +120,20 @@ namespace Biblioteca.API.Clients
         {
             try
             {
+                var client = await CreateHttpClientAsync();
                 var json = JsonSerializer.Serialize(usuario, _jsonOptions);
                 var content = new StringContent(json, Encoding.UTF8, "application/json");
 
-                var response = await _httpClient.PutAsync("api/usuarios", content);
-                return response.IsSuccessStatusCode;
+                var response = await client.PutAsync("api/usuarios", content);
+                if (!response.IsSuccessStatusCode)
+                {
+                    var body = await response.Content.ReadAsStringAsync();
+                    if (response.StatusCode == System.Net.HttpStatusCode.Forbidden)
+                        throw new Exception("No tiene permisos suficientes para realizar esta acción.");
+                    var message = string.IsNullOrWhiteSpace(body) ? response.ReasonPhrase : body;
+                    throw new Exception(message);
+                }
+                return true;
             }
             catch (HttpRequestException ex)
             {
@@ -124,8 +145,17 @@ namespace Biblioteca.API.Clients
         {
             try
             {
-                var response = await _httpClient.DeleteAsync($"api/usuarios/{id}");
-                return response.IsSuccessStatusCode;
+                var client = await CreateHttpClientAsync();
+                var response = await client.DeleteAsync($"api/usuarios/{id}");
+                if (!response.IsSuccessStatusCode)
+                {
+                    var body = await response.Content.ReadAsStringAsync();
+                    if (response.StatusCode == System.Net.HttpStatusCode.Forbidden)
+                        throw new Exception("No tiene permisos suficientes para realizar esta acción.");
+                    var message = string.IsNullOrWhiteSpace(body) ? response.ReasonPhrase : body;
+                    throw new Exception(message);
+                }
+                return true;
             }
             catch (HttpRequestException ex)
             {

@@ -1,5 +1,6 @@
 using Biblioteca.API.Clients;
 using Biblioteca.Blazor.WebAssembly;
+using Biblioteca.Blazor.WebAssembly.Services;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 
@@ -10,50 +11,27 @@ builder.RootComponents.Add<HeadOutlet>("head::after");
 // Configurar la URL base de la API
 var apiBaseUrl = builder.Configuration["ApiBaseUrl"] ?? "https://localhost:7152";
 
-// Registrar HttpClient base
+// Registrar HttpClient base (Scoped en WASM)
 builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(apiBaseUrl) });
 
-// Registrar los API Clients con HttpClient
-builder.Services.AddScoped<AutorApiClient>(sp =>
-{
-    var httpClient = new HttpClient { BaseAddress = new Uri(apiBaseUrl) };
-    return new AutorApiClient(httpClient);
-});
+// Registrar los API Clients reutilizando el HttpClient de DI
+builder.Services.AddScoped<AutorApiClient>(sp => new AutorApiClient(sp.GetRequiredService<HttpClient>()));
+builder.Services.AddScoped<GeneroApiClient>(sp => new GeneroApiClient(sp.GetRequiredService<HttpClient>()));
+builder.Services.AddScoped<LibroApiClient>(sp => new LibroApiClient(sp.GetRequiredService<HttpClient>()));
+builder.Services.AddScoped<EditorialApiClient>(sp => new EditorialApiClient(sp.GetRequiredService<HttpClient>()));
+builder.Services.AddScoped<PersonaApiClient>(sp => new PersonaApiClient(sp.GetRequiredService<HttpClient>()));
+builder.Services.AddScoped<UsuarioApiClient>(sp => new UsuarioApiClient(sp.GetRequiredService<HttpClient>()));
+builder.Services.AddScoped<PrestamoApiClient>(sp => new PrestamoApiClient(sp.GetRequiredService<HttpClient>()));
 
-builder.Services.AddScoped<GeneroApiClient>(sp =>
-{
-    var httpClient = new HttpClient { BaseAddress = new Uri(apiBaseUrl) };
-    return new GeneroApiClient(httpClient);
-});
+builder.Services.AddScoped<AuthApiClient>(sp => new AuthApiClient(sp.GetRequiredService<HttpClient>()));
 
-builder.Services.AddScoped<LibroApiClient>(sp =>
-{
-    var httpClient = new HttpClient { BaseAddress = new Uri(apiBaseUrl) };
-    return new LibroApiClient(httpClient);
-});
+// IAuthService debe ser Scoped (no Singleton) ya que depende de servicios Scoped
+builder.Services.AddScoped<IAuthService, WasmAuthService>();
 
-builder.Services.AddScoped<EditorialApiClient>(sp =>
-{
-    var httpClient = new HttpClient { BaseAddress = new Uri(apiBaseUrl) };
-    return new EditorialApiClient(httpClient);
-});
+var host = builder.Build();
 
-builder.Services.AddScoped<PersonaApiClient>(sp =>
-{
-    var httpClient = new HttpClient { BaseAddress = new Uri(apiBaseUrl) };
-    return new PersonaApiClient(httpClient);
-});
+// Registrar el servicio de auth en el proveedor estático antes de que se use cualquier ApiClient
+var authSvc = host.Services.GetRequiredService<IAuthService>();
+AuthServiceProvider.Register(authSvc);
 
-builder.Services.AddScoped<UsuarioApiClient>(sp =>
-{
-    var httpClient = new HttpClient { BaseAddress = new Uri(apiBaseUrl) };
-    return new UsuarioApiClient(httpClient);
-});
-
-builder.Services.AddScoped<PrestamoApiClient>(sp =>
-{
-    var httpClient = new HttpClient { BaseAddress = new Uri(apiBaseUrl) };
-    return new PrestamoApiClient(httpClient);
-});
-
-await builder.Build().RunAsync();
+await host.RunAsync();

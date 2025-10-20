@@ -6,8 +6,10 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
 
-// Configurar HttpClient para API
-var apiBaseUrl = "https://localhost:7152/";
+// Configurar HttpClient para API (configurable)
+var apiBaseUrl = builder.Configuration["ApiBaseUrl"]
+                  ?? Environment.GetEnvironmentVariable("API_BASE_URL")
+                  ?? "https://localhost:7152/";
 
 builder.Services.AddHttpClient<AutorApiClient>(client =>
 {
@@ -51,7 +53,23 @@ builder.Services.AddHttpClient<PrestamoApiClient>(client =>
     client.DefaultRequestHeaders.Add("Accept", "application/json");
 });
 
+builder.Services.AddHttpClient<AuthApiClient>(client =>
+{
+    client.BaseAddress = new Uri(apiBaseUrl);
+    client.DefaultRequestHeaders.Add("Accept", "application/json");
+});
+
+builder.Services.AddSingleton<IAuthService, SimpleAuthService>();
+
 var app = builder.Build();
+
+// Wire AuthServiceProvider
+using (var scope = app.Services.CreateScope())
+{
+    var authSvc = scope.ServiceProvider.GetRequiredService<IAuthService>();
+    await authSvc.InitializeAsync();
+    AuthServiceProvider.Register(authSvc);
+}
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())

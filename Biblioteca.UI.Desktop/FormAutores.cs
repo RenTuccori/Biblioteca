@@ -10,17 +10,39 @@ namespace Biblioteca.UI.Desktop
     public partial class FormAutores : Form
     {
         private readonly AutorApiClient _autorApiClient;
+        private readonly IAuthService _auth;
         private List<AutorDto> _autores = new();
 
-        public FormAutores(AutorApiClient autorApiClient)
+        public FormAutores(AutorApiClient autorApiClient, IAuthService auth)
         {
             InitializeComponent();
             _autorApiClient = autorApiClient;
+            _auth = auth;
         }
 
         private async void FormAutores_Load(object sender, EventArgs e)
         {
+            await AplicarPermisosAsync();
             await CargarAutores();
+        }
+
+        private async Task AplicarPermisosAsync()
+        {
+            var puedeLeer = await _auth.HasPermissionAsync("autores.leer");
+            var puedeAgregar = await _auth.HasPermissionAsync("autores.agregar");
+            var puedeActualizar = await _auth.HasPermissionAsync("autores.actualizar");
+            var puedeEliminar = await _auth.HasPermissionAsync("autores.eliminar");
+
+            if (!puedeLeer)
+            {
+                MessageBox.Show("No tiene permiso para ver autores.", "Permisos", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                Close();
+                return;
+            }
+
+            btnAgregar.Enabled = puedeAgregar;
+            btnModificar.Enabled = puedeActualizar;
+            btnEliminar.Enabled = puedeEliminar;
         }
 
         private void dgvAutores_SelectionChanged(object sender, EventArgs e)
@@ -173,10 +195,7 @@ namespace Biblioteca.UI.Desktop
                     dgvAutores.Columns["Apellido"].HeaderText = "Apellido";
                 }
                 
-                // Limpiar la selección para que no se cargue automáticamente el primer elemento
                 dgvAutores.ClearSelection();
-
-                // Dejar campos vacíos al iniciar/cargar
                 LimpiarCampos();
             }
             catch (Exception ex)

@@ -6,16 +6,38 @@ namespace Biblioteca.UI.Desktop
     public partial class FormEditoriales : Form
     {
         private readonly EditorialApiClient _editorialApiClient;
+        private readonly IAuthService _auth;
 
-        public FormEditoriales(EditorialApiClient editorialApiClient)
+        public FormEditoriales(EditorialApiClient editorialApiClient, IAuthService auth)
         {
             InitializeComponent();
             _editorialApiClient = editorialApiClient;
+            _auth = auth;
         }
 
         private async void FormEditoriales_Load(object sender, EventArgs e)
         {
+            await AplicarPermisosAsync();
             await CargarEditoriales();
+        }
+
+        private async Task AplicarPermisosAsync()
+        {
+            var puedeLeer = await _auth.HasPermissionAsync("editoriales.leer");
+            var puedeAgregar = await _auth.HasPermissionAsync("editoriales.agregar");
+            var puedeActualizar = await _auth.HasPermissionAsync("editoriales.actualizar");
+            var puedeEliminar = await _auth.HasPermissionAsync("editoriales.eliminar");
+
+            if (!puedeLeer)
+            {
+                MessageBox.Show("No tiene permiso para ver editoriales.", "Permisos", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                Close();
+                return;
+            }
+
+            btnAgregar.Enabled = puedeAgregar;
+            btnModificar.Enabled = puedeActualizar;
+            btnEliminar.Enabled = puedeEliminar;
         }
 
         private void dgvEditoriales_SelectionChanged(object sender, EventArgs e)
@@ -37,10 +59,7 @@ namespace Biblioteca.UI.Desktop
                     return;
                 }
 
-                var nuevaEditorialDto = new CrearEditorialDto 
-                { 
-                    Nombre = txtNombreEditorial.Text.Trim()
-                };
+                var nuevaEditorialDto = new CrearEditorialDto { Nombre = txtNombreEditorial.Text.Trim() };
                 await _editorialApiClient.CreateAsync(nuevaEditorialDto);
                 MessageBox.Show("Editorial agregada con éxito.", "Éxito", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 await CargarEditoriales();
@@ -68,12 +87,7 @@ namespace Biblioteca.UI.Desktop
                 }
 
                 var editorialSeleccionada = (EditorialDto)dgvEditoriales.SelectedRows[0].DataBoundItem;
-                var editorialModificadaDto = new EditorialDto 
-                { 
-                    Id = editorialSeleccionada.Id, 
-                    Nombre = txtNombreEditorial.Text.Trim()
-                };
-                
+                var editorialModificadaDto = new EditorialDto { Id = editorialSeleccionada.Id, Nombre = txtNombreEditorial.Text.Trim() };
                 bool resultado = await _editorialApiClient.UpdateAsync(editorialModificadaDto);
                 if (resultado)
                 {
@@ -133,11 +147,7 @@ namespace Biblioteca.UI.Desktop
 
                 dgvEditoriales.DataSource = null;
                 dgvEditoriales.DataSource = editorialesDto;
-                
-                // Limpiar la selección para que no se cargue automáticamente el primer elemento
                 dgvEditoriales.ClearSelection();
-
-                // Dejar campo vacío al iniciar/cargar
                 LimpiarCampos();
             }
             catch (Exception ex)

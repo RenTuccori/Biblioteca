@@ -3,6 +3,7 @@
 @using Biblioteca.DTOs
 @inject EditorialApiClient EditorialClient
 @inject IJSRuntime JSRuntime
+@inject IAuthService Auth
 
 <PageTitle>Editoriales</PageTitle>
 
@@ -11,9 +12,12 @@
         <div class="col-12">
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <h2><i class="fas fa-building"></i> Gestión de Editoriales</h2>
-                <button class="btn btn-info" @onclick="AbrirModalAgregar">
-                    <i class="fas fa-plus"></i> Nueva Editorial
-                </button>
+                @if (canCreate)
+                {
+                    <button class="btn btn-info" @onclick="AbrirModalAgregar">
+                        <i class="fas fa-plus"></i> Nueva Editorial
+                    </button>
+                }
             </div>
         </div>
     </div>
@@ -22,7 +26,7 @@
     {
         <div class="text-center">
             <div class="spinner-border text-info" role="status">
-                <span class="visually-hidden">Cargando...</span>
+                <span class="visualmente-hidden">Cargando...</span>
             </div>
         </div>
     }
@@ -71,12 +75,18 @@
                                                 <td>@editorial.Id</td>
                                                 <td>@editorial.Nombre</td>
                                                 <td class="text-center">
-                                                    <button class="btn btn-sm btn-outline-info me-1" @onclick="() => AbrirModalEditar(editorial)">
-                                                        <i class="fas fa-edit"></i>
-                                                    </button>
-                                                    <button class="btn btn-sm btn-outline-danger" @onclick="() => EliminarEditorial(editorial.Id)">
-                                                        <i class="fas fa-trash"></i>
-                                                    </button>
+                                                    @if (canEdit)
+                                                    {
+                                                        <button class="btn btn-sm btn-outline-info me-1" @onclick="() => AbrirModalEditar(editorial)">
+                                                            <i class="fas fa-edit"></i>
+                                                        </button>
+                                                    }
+                                                    @if (canDelete)
+                                                    {
+                                                        <button class="btn btn-sm btn-outline-danger" @onclick="() => EliminarEditorial(editorial.Id)">
+                                                            <i class="fas fa-trash"></i>
+                                                        </button>
+                                                    }
                                                 </td>
                                             </tr>
                                         }
@@ -145,13 +155,16 @@
 
                         <div class="modal-footer px-0 pb-0">
                             <button type="button" class="btn btn-secondary" @onclick="CerrarModal">Cancelar</button>
-                            <button type="submit" class="btn btn-info" disabled="@isProcessing">
-                                @if (isProcessing)
-                                {
-                                    <span class="spinner-border spinner-border-sm me-2"></span>
-                                }
-                                Guardar
-                            </button>
+                            @if ((editorialActual?.Id ?? 0) == 0 ? canCreate : canEdit)
+                            {
+                                <button type="submit" class="btn btn-info" disabled="@isProcessing">
+                                    @if (isProcessing)
+                                    {
+                                        <span class="spinner-border spinner-border-sm me-2"></span>
+                                    }
+                                    Guardar
+                                </button>
+                            }
                         </div>
                     </EditForm>
                 </div>
@@ -170,8 +183,13 @@
     private string successMessage = string.Empty;
     private string searchText = string.Empty;
 
+    private bool canCreate, canEdit, canDelete;
+
     protected override async Task OnInitializedAsync()
     {
+        canCreate = await Auth.HasPermissionAsync("editoriales.agregar");
+        canEdit = await Auth.HasPermissionAsync("editoriales.actualizar");
+        canDelete = await Auth.HasPermissionAsync("editoriales.eliminar");
         await CargarEditoriales();
     }
 

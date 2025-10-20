@@ -74,14 +74,40 @@ namespace Biblioteca.Data
             if (existing == null)
                 return false;
 
-            // Si se está devolviendo el libro (se establece FechaDevolucionReal)
-            if (prestamo.FechaDevolucionReal.HasValue && !existing.FechaDevolucionReal.HasValue)
+            // Detectar cambios
+            bool devolviendoAhora = prestamo.FechaDevolucionReal.HasValue && !existing.FechaDevolucionReal.HasValue;
+            bool libroCambio = prestamo.LibroId != existing.LibroId;
+
+            // Manejar devolución: si se devuelve ahora, poner libro disponible
+            if (devolviendoAhora)
             {
-                var libro = _context.Libros.Find(prestamo.LibroId);
-                if (libro != null)
-                    libro.Estado = "disponible";
+                var libroActual = _context.Libros.Find(existing.LibroId);
+                if (libroActual != null)
+                    libroActual.Estado = "disponible";
             }
 
+            // Manejar cambio de libro en préstamo activo
+            if (libroCambio)
+            {
+                // Si préstamo no estaba devuelto, liberar libro anterior
+                if (!existing.FechaDevolucionReal.HasValue)
+                {
+                    var libroAnterior = _context.Libros.Find(existing.LibroId);
+                    if (libroAnterior != null)
+                        libroAnterior.Estado = "disponible";
+                }
+
+                // Validar y marcar nuevo libro como prestado (si el préstamo sigue activo)
+                var libroNuevo = _context.Libros.Find(prestamo.LibroId) ?? throw new InvalidOperationException("El libro seleccionado no existe.");
+                if (!prestamo.FechaDevolucionReal.HasValue)
+                {
+                    if (libroNuevo.Estado == "prestado")
+                        throw new InvalidOperationException("El libro seleccionado ya está prestado.");
+                    libroNuevo.Estado = "prestado";
+                }
+            }
+
+            // Actualizar campos básicos
             existing.LibroId = prestamo.LibroId;
             existing.SocioId = prestamo.SocioId;
             existing.FechaPrestamo = prestamo.FechaPrestamo;

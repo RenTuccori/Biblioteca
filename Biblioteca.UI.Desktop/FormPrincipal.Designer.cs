@@ -37,8 +37,13 @@
             this.btnGestionarEditoriales = new Button();
             this.btnGestionarUsuarios = new Button();
             this.btnGestionarPrestamos = new Button();
+            this.panelTopBar = new Panel();
+            this.lblBienvenido = new Label();
+            this.btnCambiarContrasena = new Button();
+            this.btnCerrarSesion = new Button();
             this.tableLayoutMain.SuspendLayout();
             this.tableLayoutButtons.SuspendLayout();
+            this.panelTopBar.SuspendLayout();
             this.SuspendLayout();
             // 
             // tableLayoutMain
@@ -46,18 +51,56 @@
             this.tableLayoutMain.BackColor = Color.WhiteSmoke;
             this.tableLayoutMain.ColumnCount = 1;
             this.tableLayoutMain.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
-            this.tableLayoutMain.Controls.Add(this.lblTitulo, 0, 0);
-            this.tableLayoutMain.Controls.Add(this.tableLayoutButtons, 0, 1);
+            this.tableLayoutMain.Controls.Add(this.panelTopBar, 0, 0);
+            this.tableLayoutMain.Controls.Add(this.lblTitulo, 0, 1);
+            this.tableLayoutMain.Controls.Add(this.tableLayoutButtons, 0, 2);
             this.tableLayoutMain.Dock = DockStyle.Fill;
             this.tableLayoutMain.Location = new Point(0, 0);
             this.tableLayoutMain.Margin = new Padding(4);
             this.tableLayoutMain.Name = "tableLayoutMain";
             this.tableLayoutMain.Padding = new Padding(20);
-            this.tableLayoutMain.RowCount = 2;
+            this.tableLayoutMain.RowCount = 3;
+            this.tableLayoutMain.RowStyles.Add(new RowStyle(SizeType.AutoSize));
             this.tableLayoutMain.RowStyles.Add(new RowStyle(SizeType.AutoSize));
             this.tableLayoutMain.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
             this.tableLayoutMain.Size = new Size(600, 400);
             this.tableLayoutMain.TabIndex = 0;
+            // 
+            // panelTopBar
+            // 
+            this.panelTopBar.BackColor = Color.WhiteSmoke; // mismo color que el fondo
+            this.panelTopBar.Dock = DockStyle.Top;
+            this.panelTopBar.Height = 40;
+            this.panelTopBar.Padding = new Padding(10, 5, 10, 5);
+            this.panelTopBar.Controls.Add(this.lblBienvenido);
+            this.panelTopBar.Controls.Add(this.btnCambiarContrasena);
+            this.panelTopBar.Controls.Add(this.btnCerrarSesion);
+            // 
+            // lblBienvenido
+            // 
+            this.lblBienvenido.AutoSize = true;
+            this.lblBienvenido.Font = new Font("Segoe UI", 11F, FontStyle.Bold); // más llamativo
+            this.lblBienvenido.ForeColor = Color.DarkSlateBlue; // mismo azul que el título
+            this.lblBienvenido.Location = new Point(15, 9);
+            this.lblBienvenido.Name = "lblBienvenido";
+            this.lblBienvenido.Size = new Size(100, 20);
+            this.lblBienvenido.Text = "Bienvenido";
+            // 
+            // btnCambiarContrasena
+            // 
+            this.btnCambiarContrasena.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            this.btnCambiarContrasena.Location = new Point(320, 7); // ligeramente a la izquierda
+            this.btnCambiarContrasena.Size = new Size(150, 26);
+            this.btnCambiarContrasena.Text = "Cambiar contraseña";
+            this.btnCambiarContrasena.Click += new EventHandler(this.btnCambiarContrasena_Click);
+            // 
+            // btnCerrarSesion
+            // 
+            this.btnCerrarSesion.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            this.btnCerrarSesion.Location = new Point(470, 7); // mover a la izquierda para no cortar
+            this.btnCerrarSesion.Size = new Size(80, 26);
+            this.btnCerrarSesion.Text = "Salir";
+            this.btnCerrarSesion.Click += new EventHandler(this.btnCerrarSesion_Click);
             // 
             // lblTitulo
             // 
@@ -65,7 +108,7 @@
             this.lblTitulo.AutoSize = true;
             this.lblTitulo.Font = new Font("Segoe UI", 18F, FontStyle.Bold);
             this.lblTitulo.ForeColor = Color.DarkSlateBlue;
-            this.lblTitulo.Location = new Point(115, 20);
+            this.lblTitulo.Location = new Point(115, 60);
             this.lblTitulo.Margin = new Padding(4, 0, 4, 20);
             this.lblTitulo.Name = "lblTitulo";
             this.lblTitulo.Size = new Size(370, 32);
@@ -223,6 +266,8 @@
             this.tableLayoutMain.ResumeLayout(false);
             this.tableLayoutMain.PerformLayout();
             this.tableLayoutButtons.ResumeLayout(false);
+            this.panelTopBar.ResumeLayout(false);
+            this.panelTopBar.PerformLayout();
             this.ResumeLayout(false);
         }
 
@@ -237,5 +282,9 @@
         private Button btnGestionarEditoriales;
         private Button btnGestionarUsuarios;
         private Button btnGestionarPrestamos;
+        private Panel panelTopBar;
+        private Label lblBienvenido;
+        private Button btnCambiarContrasena;
+        private Button btnCerrarSesion;
     }
 }

@@ -4,6 +4,9 @@
     <Compile Update="BaseGestionForm.cs">
       <SubType>Form</SubType>
     </Compile>
+    <Compile Update="FormChangePassword.cs">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Update="FormEditoriales.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -14,6 +17,9 @@
       <SubType>Form</SubType>
     </Compile>
     <Compile Update="FormGeneros.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="FormLogin.cs">
       <SubType>Form</SubType>
     </Compile>
     <Compile Update="FormPrestamos.cs">

@@ -1,3 +1,5 @@
+using System.Text.RegularExpressions;
+
 namespace Biblioteca.Domain.Model
 {
     public class Persona
@@ -81,8 +83,12 @@ namespace Biblioteca.Domain.Model
         {
             if (string.IsNullOrWhiteSpace(email))
                 throw new ArgumentException("El email no puede estar vacío.", nameof(email));
-            if (!email.Contains("@"))
+
+            // Regex simple y efectiva para validar emails comunes
+            var pattern = @"^[^\s@]+@[^\s@]+\.[^\s@]+$";
+            if (!Regex.IsMatch(email, pattern, RegexOptions.IgnoreCase))
                 throw new ArgumentException("El email debe tener un formato válido.", nameof(email));
+
             _email = email;
         }
     }

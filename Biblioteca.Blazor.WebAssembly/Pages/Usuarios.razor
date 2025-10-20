@@ -4,6 +4,7 @@
 @inject UsuarioApiClient UsuarioClient
 @inject PersonaApiClient PersonaClient
 @inject IJSRuntime JSRuntime
+@inject IAuthService Auth
 
 <PageTitle>Usuarios</PageTitle>
 
@@ -23,7 +24,7 @@
     {
         <div class="text-center">
             <div class="spinner-border text-info" role="status">
-                <span class="visually-hidden">Cargando...</span>
+                <span class="visualmente-hidden">Cargando...</span>
             </div>
         </div>
     }
@@ -79,7 +80,7 @@
                                                 <td>@(personas?.FirstOrDefault(p => p.Id == usuario.PersonaId)?.Dni ?? "N/A")</td>
                                                 <td>@(personas?.FirstOrDefault(p => p.Id == usuario.PersonaId)?.Email ?? "N/A")</td>
                                                 <td>
-                                                    <span class="badge @(usuario.Rol == "bibliotecario" ? "bg-primary" : "bg-success")">
+                                                    <span class="badge @(usuario.Rol == "bibliotecario" ? "bg-primary" : usuario.Rol == "administrador" ? "bg-dark" : "bg-success")">
                                                         @usuario.Rol
                                                     </span>
                                                 </td>
@@ -127,7 +128,6 @@
     }
 </div>
 
-<!-- Modal para Agregar/Editar Usuario -->
 @if (showModal)
 {
     <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
@@ -199,10 +199,14 @@
                                         </div>
                                     </div>
                                     <div class="col-md-6">
-                                        <div class="mb-3">
-                                            <label class="form-label">Clave *</label>
-                                            <InputText class="form-control" type="password" @bind-Value="usuarioActual.Clave" />
-                                        </div>
+                                        @if (usuarioActual.Id == 0)
+                                        {
+                                            <div class="mb-3">
+                                                <label class="form-label">Clave *</label>
+                                                <InputText class="form-control" type="password" @bind-Value="passwordInput" />
+                                                <div class="form-text">Mínimo 6 caracteres.</div>
+                                            </div>
+                                        }
                                     </div>
                                 </div>
                                 <div class="row">
@@ -210,9 +214,17 @@
                                         <div class="mb-3">
                                             <label class="form-label">Rol *</label>
                                             <InputSelect class="form-select" @bind-Value="usuarioActual.Rol">
-                                                <option value="">Seleccionar rol...</option>
-                                                <option value="socio">Socio</option>
-                                                <option value="bibliotecario">Bibliotecario</option>
+                                                @if (isBibliotecario)
+                                                {
+                                                    <option value="socio">Socio</option>
+                                                }
+                                                else
+                                                {
+                                                    <option value="">Seleccionar rol...</option>
+                                                    <option value="socio">Socio</option>
+                                                    <option value="bibliotecario">Bibliotecario</option>
+                                                    <option value="administrador">Administrador</option>
+                                                }
                                             </InputSelect>
                                         </div>
                                     </div>
@@ -242,6 +254,7 @@
     private List<PersonaDto>? personas;
     private UsuarioDto usuarioActual = new();
     private PersonaDto personaActual = new();
+    private string passwordInput = string.Empty;
     private bool showModal = false;
     private bool isLoading = true;
     private bool isProcessing = false;
@@ -249,9 +262,57 @@
     private string successMessage = string.Empty;
     private string searchText = string.Empty;
 
+    private bool isBibliotecario = false;
+    private bool isAdmin = false;
+
     protected override async Task OnInitializedAsync()
     {
+        await LoadRoleAsync();
         await CargarDatos();
+    }
+
+    private async Task LoadRoleAsync()
+    {
+        try
+        {
+            var token = await Auth.GetTokenAsync();
+            if (string.IsNullOrEmpty(token)) return;
+            var parts = token.Split('.');
+            if (parts.Length < 2) return;
+            var payload = parts[1].Replace('-', '+').Replace('_', '/');
+            switch (payload.Length % 4)
+            {
+                case 2: payload += "=="; break;
+                case 3: payload += "="; break;
+            }
+            var json = System.Text.Encoding.UTF8.GetString(Convert.FromBase64String(payload));
+            using var doc = System.Text.Json.JsonDocument.Parse(json);
+            var root = doc.RootElement;
+
+            string[] roleKeys = new[] { "http://schemas.microsoft.com/ws/2008/06/identity/claims/role", "role", "roles" };
+            foreach (var key in roleKeys)
+            {
+                if (root.TryGetProperty(key, out var roleEl))
+                {
+                    if (roleEl.ValueKind == System.Text.Json.JsonValueKind.Array)
+                    {
+                        foreach (var item in roleEl.EnumerateArray())
+                        {
+                            var r = item.GetString()?.ToLowerInvariant();
+                            if (r == "administrador") isAdmin = true;
+                            if (r == "bibliotecario") isBibliotecario = true;
+                        }
+                    }
+                    else if (roleEl.ValueKind == System.Text.Json.JsonValueKind.String)
+                    {
+                        var r = roleEl.GetString()?.ToLowerInvariant();
+                        if (r == "administrador") isAdmin = true;
+                        if (r == "bibliotecario") isBibliotecario = true;
+                    }
+                }
+            }
+        }
+        catch { }
     }
 
     private async Task CargarDatos()
@@ -320,8 +381,10 @@
 
     private void AbrirModalAgregar()
     {
-        usuarioActual = new UsuarioDto { Id = 0, NombreUsuario = string.Empty, Clave = string.Empty, Rol = "socio" };
+        usuarioActual = new UsuarioDto { Id = 0, NombreUsuario = string.Empty, Rol = isBibliotecario ? "socio" : "socio" };
         personaActual = new PersonaDto { Id = 0, Nombre = string.Empty, Apellido = string.Empty, Dni = string.Empty, Email = string.Empty };
+        passwordInput = string.Empty;
+        errorMessage = string.Empty;
         showModal = true;
     }
 
@@ -331,18 +394,17 @@
         { 
             Id = usuario.Id, 
             NombreUsuario = usuario.NombreUsuario,
-            Clave = usuario.Clave,
             Rol = usuario.Rol,
             PersonaId = usuario.PersonaId
         };
 
-        // Cargar datos de la persona
         var persona = await PersonaClient.GetByIdAsync(usuario.PersonaId);
         if (persona != null)
         {
             personaActual = persona;
         }
-        
+        passwordInput = string.Empty;
+        errorMessage = string.Empty;
         showModal = true;
     }
 
@@ -351,6 +413,7 @@
         showModal = false;
         usuarioActual = new();
         personaActual = new();
+        passwordInput = string.Empty;
     }
 
     private async Task GuardarUsuario()
@@ -360,37 +423,87 @@
             isProcessing = true;
             errorMessage = string.Empty;
 
+            // Validaciones mínimas
+            if (string.IsNullOrWhiteSpace(usuarioActual.NombreUsuario)) { errorMessage = "El nombre de usuario es requerido."; return; }
+            if (string.IsNullOrWhiteSpace(usuarioActual.Rol)) { errorMessage = "El rol es requerido."; return; }
+            if (string.IsNullOrWhiteSpace(personaActual.Nombre) || string.IsNullOrWhiteSpace(personaActual.Apellido)) { errorMessage = "Nombre y Apellido son requeridos."; return; }
+            if (string.IsNullOrWhiteSpace(personaActual.Dni)) { errorMessage = "El DNI es requerido."; return; }
+            if (string.IsNullOrWhiteSpace(personaActual.Email)) { errorMessage = "El Email es requerido."; return; }
+
+            // Restringir creación por bibliotecario según reglas del backend
+            if (isBibliotecario && (usuarioActual.Rol.Equals("bibliotecario", StringComparison.OrdinalIgnoreCase) || usuarioActual.Rol.Equals("administrador", StringComparison.OrdinalIgnoreCase)))
+            {
+                errorMessage = "Un bibliotecario no puede crear usuarios con rol Bibliotecario o Administrador.";
+                return;
+            }
+
             if (usuarioActual.Id == 0)
             {
-                // Crear persona primero
-                var crearPersonaDto = new CrearPersonaDto
+                if (string.IsNullOrWhiteSpace(passwordInput) || passwordInput.Length < 6)
                 {
-                    Nombre = personaActual.Nombre,
-                    Apellido = personaActual.Apellido,
-                    Dni = personaActual.Dni,
-                    Email = personaActual.Email
-                };
-                
-                var personaCreada = await PersonaClient.CreateAsync(crearPersonaDto);
+                    errorMessage = "La clave es requerida y debe tener al menos 6 caracteres.";
+                    return;
+                }
 
-                // Crear usuario
+                // Chequear nombre de usuario duplicado
+                var coincidencias = await UsuarioClient.GetByCriteriaAsync(usuarioActual.NombreUsuario);
+                if (coincidencias.Any(u => string.Equals(u.NombreUsuario, usuarioActual.NombreUsuario, StringComparison.OrdinalIgnoreCase)))
+                {
+                    errorMessage = $"Ya existe un usuario con el nombre '{usuarioActual.NombreUsuario}'.";
+                    return;
+                }
+
+                // Reutilizar persona por DNI si ya existe y verificar que no tenga usuario asociado
+                var existentes = await PersonaClient.GetByCriteriaAsync(personaActual.Dni);
+                var coincidente = existentes.FirstOrDefault(p => string.Equals(p.Dni, personaActual.Dni, StringComparison.OrdinalIgnoreCase));
+                int personaId;
+                if (coincidente != null)
+                {
+                    var usuariosAll = usuarios ?? (await UsuarioClient.GetAllAsync()).ToList();
+                    if (usuariosAll.Any(u => u.PersonaId == coincidente.Id))
+                    {
+                        errorMessage = "La persona indicada ya tiene un usuario asociado.";
+                        return;
+                    }
+                    personaId = coincidente.Id;
+                }
+                else
+                {
+                    var crearPersonaDto = new CrearPersonaDto
+                    {
+                        Nombre = personaActual.Nombre,
+                        Apellido = personaActual.Apellido,
+                        Dni = personaActual.Dni,
+                        Email = personaActual.Email
+                    };
+                    var personaCreada = await PersonaClient.CreateAsync(crearPersonaDto);
+                    personaId = personaCreada.Id;
+                    if (personaId == 0)
+                    {
+                        // fallback: buscar por DNI
+                        var byDni = await PersonaClient.GetByCriteriaAsync(personaActual.Dni);
+                        personaId = byDni.FirstOrDefault(p => p.Dni == personaActual.Dni)?.Id ?? 0;
+                        if (personaId == 0)
+                        {
+                            errorMessage = "No se pudo obtener el Id de la persona creada.";
+                            return;
+                        }
+                    }
+                }
+
                 var crearUsuarioDto = new CrearUsuarioDto
                 {
                     NombreUsuario = usuarioActual.NombreUsuario,
-                    Clave = usuarioActual.Clave,
+                    Clave = passwordInput,
                     Rol = usuarioActual.Rol,
-                    PersonaId = personaCreada.Id
+                    PersonaId = personaId
                 };
-                
                 await UsuarioClient.CreateAsync(crearUsuarioDto);
                 successMessage = "Usuario creado exitosamente";
             }
             else
             {
-                // Actualizar persona
                 await PersonaClient.UpdateAsync(personaActual);
-
-                // Actualizar usuario
                 usuarioActual.PersonaId = personaActual.Id;
                 await UsuarioClient.UpdateAsync(usuarioActual);
                 successMessage = "Usuario actualizado exitosamente";
@@ -416,10 +529,7 @@
 
         try
         {
-            // Eliminar usuario primero
             await UsuarioClient.DeleteAsync(usuario.Id);
-            
-            // Luego eliminar persona
             await PersonaClient.DeleteAsync(usuario.PersonaId);
             
             successMessage = "Usuario eliminado exitosamente";

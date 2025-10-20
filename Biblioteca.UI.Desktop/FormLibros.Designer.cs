@@ -288,7 +288,7 @@
             this.BtnEliminar.TabIndex = 2;
             this.BtnEliminar.Text = "- Eliminar";
             this.BtnEliminar.UseVisualStyleBackColor = false;
-            this.BtnEliminar.Click += new EventHandler(this.btnEliminar_Click);
+            this.BtnEliminar.Click += new EventHandler(this.BtnEliminar_Click);
             // 
             // dgvLibros
             // 

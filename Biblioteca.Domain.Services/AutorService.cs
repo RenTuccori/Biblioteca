@@ -25,9 +25,14 @@ namespace Biblioteca.Domain.Services
             _autorRepository.Add(autor);
             _autorRepository.SaveChanges();
 
+            // Recuperar el Id asignado
+            var saved = _autorRepository.GetAll()
+                .LastOrDefault(a => string.Equals(a.Nombre, dto.Nombre, StringComparison.Ordinal)
+                                  && string.Equals(a.Apellido, dto.Apellido, StringComparison.Ordinal));
+
             return new AutorDto
             {
-                Id = autor.Id,
+                Id = saved?.Id ?? autor.Id,
                 Nombre = autor.Nombre,
                 Apellido = autor.Apellido
             };

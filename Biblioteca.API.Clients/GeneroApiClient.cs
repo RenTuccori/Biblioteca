@@ -4,12 +4,12 @@ using System.Text.Json;
 
 namespace Biblioteca.API.Clients
 {
-    public class GeneroApiClient
+    public class GeneroApiClient : BaseApiClient
     {
         private readonly HttpClient _httpClient;
         private readonly JsonSerializerOptions _jsonOptions;
 
-        public GeneroApiClient(HttpClient httpClient)
+        public GeneroApiClient(HttpClient httpClient) : base(httpClient)
         {
             _httpClient = httpClient;
             _jsonOptions = new JsonSerializerOptions
@@ -22,7 +22,8 @@ namespace Biblioteca.API.Clients
         {
             try
             {
-                var response = await _httpClient.GetAsync("api/generos");
+                var client = await CreateHttpClientAsync();
+                var response = await client.GetAsync("api/generos");
                 response.EnsureSuccessStatusCode();
 
                 var json = await response.Content.ReadAsStringAsync();
@@ -38,7 +39,8 @@ namespace Biblioteca.API.Clients
         {
             try
             {
-                var response = await _httpClient.GetAsync($"api/generos/{id}");
+                var client = await CreateHttpClientAsync();
+                var response = await client.GetAsync($"api/generos/{id}");
                 if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
                     return null;
 
@@ -56,8 +58,9 @@ namespace Biblioteca.API.Clients
         {
             try
             {
+                var client = await CreateHttpClientAsync();
                 var encodedTexto = Uri.EscapeDataString(texto ?? "");
-                var response = await _httpClient.GetAsync($"api/generos/criteria?texto={encodedTexto}");
+                var response = await client.GetAsync($"api/generos/criteria?texto={encodedTexto}");
                 response.EnsureSuccessStatusCode();
 
                 var json = await response.Content.ReadAsStringAsync();
@@ -73,10 +76,11 @@ namespace Biblioteca.API.Clients
         {
             try
             {
+                var client = await CreateHttpClientAsync();
                 var json = JsonSerializer.Serialize(genero, _jsonOptions);
                 var content = new StringContent(json, Encoding.UTF8, "application/json");
 
-                var response = await _httpClient.PostAsync("api/generos", content);
+                var response = await client.PostAsync("api/generos", content);
                 response.EnsureSuccessStatusCode();
 
                 var responseJson = await response.Content.ReadAsStringAsync();
@@ -92,10 +96,11 @@ namespace Biblioteca.API.Clients
         {
             try
             {
+                var client = await CreateHttpClientAsync();
                 var json = JsonSerializer.Serialize(genero, _jsonOptions);
                 var content = new StringContent(json, Encoding.UTF8, "application/json");
 
-                var response = await _httpClient.PutAsync("api/generos", content);
+                var response = await client.PutAsync("api/generos", content);
                 return response.IsSuccessStatusCode;
             }
             catch (HttpRequestException ex)
@@ -108,7 +113,8 @@ namespace Biblioteca.API.Clients
         {
             try
             {
-                var response = await _httpClient.DeleteAsync($"api/generos/{id}");
+                var client = await CreateHttpClientAsync();
+                var response = await client.DeleteAsync($"api/generos/{id}");
                 return response.IsSuccessStatusCode;
             }
             catch (HttpRequestException ex)

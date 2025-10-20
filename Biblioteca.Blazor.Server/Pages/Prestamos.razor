@@ -5,6 +5,7 @@
 @inject LibroApiClient LibroClient
 @inject UsuarioApiClient UsuarioClient
 @inject IJSRuntime JSRuntime
+@inject IAuthService Auth
 
 <PageTitle>Préstamos</PageTitle>
 
@@ -13,9 +14,12 @@
         <div class="col-12">
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <h2><i class="fas fa-handshake"></i> Gestión de Préstamos</h2>
-                <button class="btn btn-info" @onclick="AbrirModalAgregar">
-                    <i class="fas fa-plus"></i> Nuevo Préstamo
-                </button>
+                @if (canCreate)
+                {
+                    <button class="btn btn-info" @onclick="AbrirModalAgregar">
+                        <i class="fas fa-plus"></i> Nuevo Préstamo
+                    </button>
+                }
             </div>
         </div>
     </div>
@@ -112,18 +116,24 @@
                                                     }
                                                 </td>
                                                 <td class="text-center">
-                                                    @if (!prestamo.FechaDevolucionReal.HasValue)
+                                                    @if (!prestamo.FechaDevolucionReal.HasValue && canEdit)
                                                     {
                                                         <button class="btn btn-sm btn-success me-1" @onclick="() => DevolverLibro(prestamo.Id)" title="Devolver">
                                                             <i class="fas fa-check"></i>
                                                         </button>
                                                     }
-                                                    <button class="btn btn-sm btn-outline-info me-1" @onclick="() => AbrirModalEditar(prestamo)">
-                                                        <i class="fas fa-edit"></i>
-                                                    </button>
-                                                    <button class="btn btn-sm btn-outline-danger" @onclick="() => EliminarPrestamo(prestamo.Id)">
-                                                        <i class="fas fa-trash"></i>
-                                                    </button>
+                                                    @if (canEdit)
+                                                    {
+                                                        <button class="btn btn-sm btn-outline-info me-1" @onclick="() => AbrirModalEditar(prestamo)">
+                                                            <i class="fas fa-edit"></i>
+                                                        </button>
+                                                    }
+                                                    @if (canDelete)
+                                                    {
+                                                        <button class="btn btn-sm btn-outline-danger" @onclick="() => EliminarPrestamo(prestamo.Id)">
+                                                            <i class="fas fa-trash"></i>
+                                                        </button>
+                                                    }
                                                 </td>
                                             </tr>
                                         }
@@ -234,13 +244,16 @@
 
                         <div class="modal-footer px-0 pb-0">
                             <button type="button" class="btn btn-secondary" @onclick="CerrarModal">Cancelar</button>
-                            <button type="submit" class="btn btn-info" disabled="@isProcessing">
-                                @if (isProcessing)
-                                {
-                                    <span class="spinner-border spinner-border-sm me-2"></span>
-                                }
-                                Guardar
-                            </button>
+                            @if ((prestamoActual?.Id ?? 0) == 0 ? canCreate : canEdit)
+                            {
+                                <button type="submit" class="btn btn-info" disabled="@isProcessing">
+                                    @if (isProcessing)
+                                    {
+                                        <span class="spinner-border spinner-border-sm me-2"></span>
+                                    }
+                                    Guardar
+                                </button>
+                            }
                         </div>
                     </EditForm>
                 </div>
@@ -261,8 +274,13 @@
     private string successMessage = string.Empty;
     private string filtroActual = "todos";
 
+    private bool canCreate, canEdit, canDelete;
+
     protected override async Task OnInitializedAsync()
     {
+        canCreate = await Auth.HasPermissionAsync("prestamos.agregar");
+        canEdit = await Auth.HasPermissionAsync("prestamos.actualizar");
+        canDelete = await Auth.HasPermissionAsync("prestamos.eliminar");
         await CargarDatos();
     }
 

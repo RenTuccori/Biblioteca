@@ -3,6 +3,7 @@
 @using Biblioteca.DTOs
 @inject GeneroApiClient GeneroClient
 @inject IJSRuntime JSRuntime
+@inject IAuthService Auth
 
 <PageTitle>Géneros</PageTitle>
 
@@ -11,9 +12,12 @@
         <div class="col-12">
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <h2><i class="fas fa-tags"></i> Gestión de Géneros</h2>
-                <button class="btn btn-success" @onclick="AbrirModalAgregar">
-                    <i class="fas fa-plus"></i> Nuevo Género
-                </button>
+                @if (canCreate)
+                {
+                    <button class="btn btn-success" @onclick="AbrirModalAgregar">
+                        <i class="fas fa-plus"></i> Nuevo Género
+                    </button>
+                }
             </div>
         </div>
     </div>
@@ -71,12 +75,18 @@
                                                 <td>@genero.Id</td>
                                                 <td>@genero.Nombre</td>
                                                 <td class="text-center">
-                                                    <button class="btn btn-sm btn-outline-success me-1" @onclick="() => AbrirModalEditar(genero)">
-                                                        <i class="fas fa-edit"></i>
-                                                    </button>
-                                                    <button class="btn btn-sm btn-outline-danger" @onclick="() => EliminarGenero(genero.Id)">
-                                                        <i class="fas fa-trash"></i>
-                                                    </button>
+                                                    @if (canEdit)
+                                                    {
+                                                        <button class="btn btn-sm btn-outline-success me-1" @onclick="() => AbrirModalEditar(genero)">
+                                                            <i class="fas fa-edit"></i>
+                                                        </button>
+                                                    }
+                                                    @if (canDelete)
+                                                    {
+                                                        <button class="btn btn-sm btn-outline-danger" @onclick="() => EliminarGenero(genero.Id)">
+                                                            <i class="fas fa-trash"></i>
+                                                        </button>
+                                                    }
                                                 </td>
                                             </tr>
                                         }
@@ -170,8 +180,14 @@
     private string successMessage = string.Empty;
     private string searchText = string.Empty;
 
+    private bool canCreate, canEdit, canDelete;
+
     protected override async Task OnInitializedAsync()
     {
+        canCreate = await Auth.HasPermissionAsync("generos.agregar");
+        canEdit = await Auth.HasPermissionAsync("generos.actualizar");
+        canDelete = await Auth.HasPermissionAsync("generos.eliminar");
+        
         await CargarGeneros();
     }
 

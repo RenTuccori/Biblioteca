@@ -23,9 +23,11 @@ namespace Biblioteca.Domain.Services
             _generoRepository.Add(genero);
             _generoRepository.SaveChanges();
 
+            var saved = _generoRepository.GetAll().LastOrDefault(g => string.Equals(g.Nombre, dto.Nombre, StringComparison.Ordinal));
+
             return new GeneroDto
             {
-                Id = genero.Id,
+                Id = saved?.Id ?? genero.Id,
                 Nombre = genero.Nombre
             };
         }

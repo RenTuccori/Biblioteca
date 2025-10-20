@@ -9,26 +9,49 @@ namespace Biblioteca.UI.Desktop
         private readonly AutorApiClient _autorApiClient;
         private readonly GeneroApiClient _generoApiClient;
         private readonly EditorialApiClient _editorialApiClient;
+        private readonly IAuthService _auth;
         private List<LibroDto> _libros = new();
         private List<AutorDto> _autores = new();
         private List<GeneroDto> _generos = new();
         private List<EditorialDto> _editoriales = new();
 
-        public FormLibros(LibroApiClient libroApiClient, AutorApiClient autorApiClient, GeneroApiClient generoApiClient, EditorialApiClient editorialApiClient)
+        public FormLibros(LibroApiClient libroApiClient, AutorApiClient autorApiClient, GeneroApiClient generoApiClient, EditorialApiClient editorialApiClient, IAuthService auth)
         {
             InitializeComponent();
             _libroApiClient = libroApiClient;
             _autorApiClient = autorApiClient;
             _generoApiClient = generoApiClient;
             _editorialApiClient = editorialApiClient;
+            _auth = auth;
         }
 
         private async void FormLibros_Load(object sender, EventArgs e)
         {
+            await AplicarPermisosAsync();
             await CargarDatos();
         }
 
-        private void dgvLibros_SelectionChanged(object sender, EventArgs e)
+        private async Task AplicarPermisosAsync()
+        {
+            var puedeLeer = await _auth.HasPermissionAsync("libros.leer");
+            var puedeAgregar = await _auth.HasPermissionAsync("libros.agregar");
+            var puedeActualizar = await _auth.HasPermissionAsync("libros.actualizar");
+            var puedeEliminar = await _auth.HasPermissionAsync("libros.eliminar");
+
+            if (!puedeLeer)
+            {
+                MessageBox.Show("No tiene permiso para ver libros.", "Permisos", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                Close();
+                return;
+            }
+
+            var isSocio = !(await _auth.HasPermissionAsync("usuarios.leer"));
+            btnAgregar.Enabled = !isSocio && puedeAgregar;
+            btnModificar.Enabled = !isSocio && puedeActualizar;
+            BtnEliminar.Enabled = !isSocio && puedeEliminar;
+        }
+
+        private async void dgvLibros_SelectionChanged(object sender, EventArgs e)
         {
             if (dgvLibros.SelectedRows.Count > 0)
             {
@@ -126,7 +149,7 @@ namespace Biblioteca.UI.Desktop
             }
         }
 
-        private async void btnEliminar_Click(object sender, EventArgs e)
+        private async void BtnEliminar_Click(object sender, EventArgs e)
         {
             if (dgvLibros.SelectedRows.Count == 0)
             {
@@ -163,11 +186,32 @@ namespace Biblioteca.UI.Desktop
         {
             try
             {
-                await CargarAutores();
-                await CargarGeneros();
-                await CargarEditoriales();
+                // Cargar listas según permisos para evitar 403
+                if (await _auth.HasPermissionAsync("autores.leer"))
+                    await CargarAutores();
+                else
+                {
+                    cmbAutor.DataSource = null;
+                    cmbAutor.Items.Clear();
+                }
+
+                if (await _auth.HasPermissionAsync("generos.leer"))
+                    await CargarGeneros();
+                else
+                {
+                    cmbGenero.DataSource = null;
+                    cmbGenero.Items.Clear();
+                }
+
+                if (await _auth.HasPermissionAsync("editoriales.leer"))
+                    await CargarEditoriales();
+                else
+                {
+                    cmbEditorial.DataSource = null;
+                    cmbEditorial.Items.Clear();
+                }
+
                 await CargarLibros();
-                // Dejar controles listos para ingreso
                 LimpiarCampos();
             }
             catch (Exception ex)
@@ -193,14 +237,11 @@ namespace Biblioteca.UI.Desktop
                     dgvLibros.Columns["GeneroNombre"].HeaderText = "Género";
                     dgvLibros.Columns["EditorialNombre"].HeaderText = "Editorial";
                     dgvLibros.Columns["Estado"].HeaderText = "Estado";
-                    
-                    // Ocultar IDs de relaciones
                     dgvLibros.Columns["AutorId"].Visible = false;
                     dgvLibros.Columns["GeneroId"].Visible = false;
                     dgvLibros.Columns["EditorialId"].Visible = false;
                 }
                 
-                // Limpiar la selección para que no se cargue automáticamente el primer elemento
                 dgvLibros.ClearSelection();
             }
             catch (Exception ex)

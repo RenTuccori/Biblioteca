@@ -1,0 +1,66 @@
+@page "/cambiar-contrasena"
+@using Biblioteca.API.Clients
+@using Biblioteca.DTOs
+@inject IAuthService Auth
+@inject NavigationManager Nav
+@inject AuthApiClient AuthApi
+
+<h3>Cambiar contraseña</h3>
+
+@if (!string.IsNullOrEmpty(error))
+{
+    <div class="alert alert-danger">@error</div>
+}
+@if (!string.IsNullOrEmpty(ok))
+{
+    <div class="alert alert-success">@ok</div>
+}
+
+<EditForm Model="model" OnValidSubmit="OnSubmitAsync">
+    <DataAnnotationsValidator />
+    <div class="mb-3">
+        <label class="form-label">Contraseña actual</label>
+        <InputText class="form-control" type="password" @bind-Value="model.CurrentPassword" />
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Nueva contraseña</label>
+        <InputText class="form-control" type="password" @bind-Value="model.NewPassword" />
+    </div>
+    <button class="btn btn-primary" disabled="@busy">Guardar</button>
+</EditForm>
+
+@code {
+    private ChangePasswordDto model = new();
+    private bool busy = false;
+    private string error = string.Empty;
+    private string ok = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!await Auth.IsAuthenticatedAsync())
+        {
+            Nav.NavigateTo("/login");
+        }
+    }
+
+    private async Task OnSubmitAsync()
+    {
+        try
+        {
+            error = ok = string.Empty;
+            busy = true;
+            var token = await Auth.GetTokenAsync();
+            if (string.IsNullOrEmpty(token)) { error = "Sesión no válida"; return; }
+            var success = await AuthApi.ChangePasswordAsync(model, token);
+            ok = success ? "Contraseña actualizada" : "No se pudo actualizar";
+        }
+        catch (Exception ex)
+        {
+            error = ex.Message;
+        }
+        finally
+        {
+            busy = false;
+        }
+    }
+}

@@ -1,0 +1,55 @@
+@page "/login"
+@using Biblioteca.API.Clients
+@using Biblioteca.DTOs
+@inject IAuthService Auth
+@inject NavigationManager Nav
+
+<h3>Iniciar sesión</h3>
+
+@if (!string.IsNullOrEmpty(error))
+{
+    <div class="alert alert-danger">@error</div>
+}
+
+<EditForm Model="login" OnValidSubmit="OnLoginAsync">
+    <DataAnnotationsValidator />
+    <div class="mb-3">
+        <label class="form-label">Usuario</label>
+        <InputText class="form-control" @bind-Value="login.Username" />
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Contraseña</label>
+        <InputText class="form-control" type="password" @bind-Value="login.Password" />
+    </div>
+    <button class="btn btn-primary" disabled="@busy">@("Ingresar")</button>
+</EditForm>
+
+@code {
+    private LoginRequest login = new() { Username = string.Empty, Password = string.Empty };
+    private string error = string.Empty;
+    private bool busy = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (await Auth.IsAuthenticatedAsync())
+        {
+            Nav.NavigateTo("/");
+        }
+    }
+
+    private async Task OnLoginAsync()
+    {
+        error = string.Empty;
+        busy = true;
+        var ok = await Auth.LoginAsync(login);
+        busy = false;
+        if (ok)
+        {
+            Nav.NavigateTo("/");
+        }
+        else
+        {
+            error = "Credenciales inválidas";
+        }
+    }
+}

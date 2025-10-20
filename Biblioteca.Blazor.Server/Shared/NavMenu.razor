@@ -1,7 +1,12 @@
+@using Biblioteca.API.Clients
+@inject IAuthService Auth
+@inject NavigationManager Nav
+@implements IDisposable
+
 <div class="top-row ps-3 navbar navbar-dark">
-    <div class="container-fluid">
-        <a class="navbar-brand" href="">Biblioteca</a>
-        <button title="Navegación" class="navbar-toggler" @onclick="ToggleNavMenu">
+    <div class="container-fluid d-flex align-items-center">
+        <a class="navbar-brand" href="/">Biblioteca</a>
+        <button title="Navegación" class="navbar-toggler ms-auto" @onclick="ToggleNavMenu">
             <span class="navbar-toggler-icon"></span>
         </button>
     </div>
@@ -9,6 +14,24 @@
 
 <div class="@NavMenuCssClass nav-scrollable" @onclick="ToggleNavMenu">
     <nav class="flex-column">
+        <div class="nav-item px-3">
+            @if (isAuth)
+            {
+                <NavLink class="nav-link" href="cambiar-contrasena">
+                    <span class="fas fa-key" aria-hidden="true"></span> Cambiar contraseña
+                </NavLink>
+                <a href="#" class="nav-link" @onclick="OnLogout">
+                    <span class="fas fa-sign-out-alt" aria-hidden="true"></span> Salir (@username)
+                </a>
+            }
+            else
+            {
+                <NavLink class="nav-link" href="login">
+                    <span class="fas fa-sign-in-alt" aria-hidden="true"></span> Ingresar
+                </NavLink>
+            }
+        </div>
+        
         <div class="nav-item px-3">
             <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
                 <span class="fas fa-home" aria-hidden="true"></span> Inicio
@@ -21,29 +44,41 @@
             </div>
         </div>
         
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="libros">
-                <span class="fas fa-book" aria-hidden="true"></span> Libros
-            </NavLink>
-        </div>
+        @if (canLibros)
+        {
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="libros">
+                    <span class="fas fa-book" aria-hidden="true"></span> Libros
+                </NavLink>
+            </div>
+        }
         
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="autores">
-                <span class="fas fa-user-edit" aria-hidden="true"></span> Autores
-            </NavLink>
-        </div>
+        @if (canAutores)
+        {
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="autores">
+                    <span class="fas fa-user-edit" aria-hidden="true"></span> Autores
+                </NavLink>
+            </div>
+        }
         
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="generos">
-                <span class="fas fa-tags" aria-hidden="true"></span> Géneros
-            </NavLink>
-        </div>
+        @if (canGeneros)
+        {
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="generos">
+                    <span class="fas fa-tags" aria-hidden="true"></span> Géneros
+                </NavLink>
+            </div>
+        }
         
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="editoriales">
-                <span class="fas fa-building" aria-hidden="true"></span> Editoriales
-            </NavLink>
-        </div>
+        @if (canEditoriales)
+        {
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="editoriales">
+                    <span class="fas fa-building" aria-hidden="true"></span> Editoriales
+                </NavLink>
+            </div>
+        }
         
         <div class="nav-item px-3">
             <div class="nav-link disabled text-white-50 mt-3">
@@ -51,11 +86,14 @@
             </div>
         </div>
         
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="usuarios">
-                <span class="fas fa-users" aria-hidden="true"></span> Usuarios
-            </NavLink>
-        </div>
+        @if (canUsuarios)
+        {
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="usuarios">
+                    <span class="fas fa-users" aria-hidden="true"></span> Usuarios
+                </NavLink>
+            </div>
+        }
         
         <div class="nav-item px-3">
             <NavLink class="nav-link" href="prestamos">
@@ -67,11 +105,52 @@
 
 @code {
     private bool collapseNavMenu = true;
+    private bool isAuth = false;
+    private string username = string.Empty;
+    private bool canUsuarios = false;
+    private bool canLibros = false;
+    private bool canAutores = false;
+    private bool canGeneros = false;
+    private bool canEditoriales = false;
 
     private string? NavMenuCssClass => collapseNavMenu ? "collapse" : null;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await RefreshAuthStateAsync();
+        Auth.AuthenticationStateChanged += OnAuthChanged;
+    }
+
+    private void OnAuthChanged()
+    {
+        _ = InvokeAsync(RefreshAuthStateAsync);
+    }
+
+    private async Task RefreshAuthStateAsync()
+    {
+        isAuth = await Auth.IsAuthenticatedAsync();
+        username = (await Auth.GetUsernameAsync()) ?? string.Empty;
+        canUsuarios = await Auth.HasPermissionAsync("usuarios.leer");
+        canLibros = await Auth.HasPermissionAsync("libros.leer");
+        canAutores = await Auth.HasPermissionAsync("autores.leer");
+        canGeneros = await Auth.HasPermissionAsync("generos.leer");
+        canEditoriales = await Auth.HasPermissionAsync("editoriales.leer");
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task OnLogout()
+    {
+        await Auth.LogoutAsync();
+        Nav.NavigateTo("/");
+    }
 
     private void ToggleNavMenu()
     {
         collapseNavMenu = !collapseNavMenu;
+    }
+
+    public void Dispose()
+    {
+        Auth.AuthenticationStateChanged -= OnAuthChanged;
     }
 }
