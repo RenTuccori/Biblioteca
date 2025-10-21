@@ -22,6 +22,7 @@ builder.Services.AddScoped<EditorialApiClient>(sp => new EditorialApiClient(sp.G
 builder.Services.AddScoped<PersonaApiClient>(sp => new PersonaApiClient(sp.GetRequiredService<HttpClient>()));
 builder.Services.AddScoped<UsuarioApiClient>(sp => new UsuarioApiClient(sp.GetRequiredService<HttpClient>()));
 builder.Services.AddScoped<PrestamoApiClient>(sp => new PrestamoApiClient(sp.GetRequiredService<HttpClient>()));
+builder.Services.AddScoped<ReporteApiClient>(sp => new ReporteApiClient(sp.GetRequiredService<HttpClient>()));
 
 builder.Services.AddScoped<AuthApiClient>(sp => new AuthApiClient(sp.GetRequiredService<HttpClient>()));
 

@@ -14,5 +14,6 @@ namespace Biblioteca.API.Clients
         Task LogoutAsync();
         Task<bool> CheckTokenExpirationAsync();
         Task<bool> HasPermissionAsync(string permission);
+        Task<bool> IsInRoleAsync(string role);
     }
 }

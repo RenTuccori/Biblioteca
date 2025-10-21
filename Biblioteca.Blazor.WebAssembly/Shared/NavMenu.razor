@@ -1,6 +1,7 @@
 @using Biblioteca.API.Clients
 @inject IAuthService Auth
 @inject NavigationManager Nav
+@implements IDisposable
 
 <div class="top-row ps-3 navbar navbar-dark">
     <div class="container-fluid d-flex align-items-center">
@@ -43,29 +44,41 @@
             </div>
         </div>
         
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="libros">
-                <span class="fas fa-book" aria-hidden="true"></span> Libros
-            </NavLink>
-        </div>
+        @if (canLibros)
+        {
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="libros">
+                    <span class="fas fa-book" aria-hidden="true"></span> Libros
+                </NavLink>
+            </div>
+        }
         
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="autores">
-                <span class="fas fa-user-edit" aria-hidden="true"></span> Autores
-            </NavLink>
-        </div>
+        @if (canAutores)
+        {
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="autores">
+                    <span class="fas fa-user-edit" aria-hidden="true"></span> Autores
+                </NavLink>
+            </div>
+        }
         
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="generos">
-                <span class="fas fa-tags" aria-hidden="true"></span> Géneros
-            </NavLink>
-        </div>
+        @if (canGeneros)
+        {
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="generos">
+                    <span class="fas fa-tags" aria-hidden="true"></span> Géneros
+                </NavLink>
+            </div>
+        }
         
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="editoriales">
-                <span class="fas fa-building" aria-hidden="true"></span> Editoriales
-            </NavLink>
-        </div>
+        @if (canEditoriales)
+        {
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="editoriales">
+                    <span class="fas fa-building" aria-hidden="true"></span> Editoriales
+                </NavLink>
+            </div>
+        }
         
         <div class="nav-item px-3">
             <div class="nav-link disabled text-white-50 mt-3">
@@ -87,6 +100,15 @@
                 <span class="fas fa-handshake" aria-hidden="true"></span> Préstamos
             </NavLink>
         </div>
+        
+        @if (canReportes)
+        {
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="reportes">
+                    <span class="fas fa-chart-bar" aria-hidden="true"></span> Reportes
+                </NavLink>
+            </div>
+        }
     </nav>
 </div>
 
@@ -95,13 +117,23 @@
     private bool isAuth = false;
     private string username = string.Empty;
     private bool canUsuarios = false;
+    private bool canLibros = false;
+    private bool canAutores = false;
+    private bool canGeneros = false;
+    private bool canEditoriales = false;
+    private bool canReportes = false;
 
     private string? NavMenuCssClass => collapseNavMenu ? "collapse" : null;
 
     protected override async Task OnInitializedAsync()
     {
         await RefreshAuthStateAsync();
-        Auth.AuthenticationStateChanged += async () => await RefreshAuthStateAsync();
+        Auth.AuthenticationStateChanged += OnAuthChanged;
+    }
+
+    private void OnAuthChanged()
+    {
+        _ = InvokeAsync(RefreshAuthStateAsync);
     }
 
     private async Task RefreshAuthStateAsync()
@@ -109,7 +141,12 @@
         isAuth = await Auth.IsAuthenticatedAsync();
         username = (await Auth.GetUsernameAsync()) ?? string.Empty;
         canUsuarios = await Auth.HasPermissionAsync("usuarios.leer");
-        StateHasChanged();
+        canLibros = await Auth.HasPermissionAsync("libros.leer");
+        canAutores = await Auth.HasPermissionAsync("autores.leer");
+        canGeneros = await Auth.HasPermissionAsync("generos.leer");
+        canEditoriales = await Auth.HasPermissionAsync("editoriales.leer");
+        canReportes = await Auth.HasPermissionAsync("prestamos.leer") && !await Auth.IsInRoleAsync("socio");
+        await InvokeAsync(StateHasChanged);
     }
 
     private async Task OnLogout()
@@ -121,5 +158,10 @@
     private void ToggleNavMenu()
     {
         collapseNavMenu = !collapseNavMenu;
+    }
+
+    public void Dispose()
+    {
+        Auth.AuthenticationStateChanged -= OnAuthChanged;
     }
 }

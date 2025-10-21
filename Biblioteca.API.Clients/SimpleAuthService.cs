@@ -98,6 +98,11 @@ namespace Biblioteca.API.Clients
             return Task.FromResult(_permissions.Contains(permission));
         }
 
+        public Task<bool> IsInRoleAsync(string role)
+        {
+            return Task.FromResult(_roles.Contains(role));
+        }
+
         private void ParsePermissionsFromToken(string token)
         {
             _permissions.Clear();

@@ -41,6 +41,7 @@ builder.Services.AddScoped<EditorialService>();
 builder.Services.AddScoped<PersonaService>();
 builder.Services.AddScoped<UsuarioService>();
 builder.Services.AddScoped<PrestamoService>();
+builder.Services.AddScoped<ReporteService>();
 
 // Auth
 builder.Services.AddScoped<AuthService>();
@@ -419,6 +420,27 @@ app.MapGet("/api/prestamos/vencidos", (HttpContext http, PrestamoService s) =>
     return Results.Ok(s.GetPrestamosVencidos());
 }).RequireAuthorization("prestamos.leer").WithTags("Préstamos");
 app.MapPost("/api/prestamos/{id}/devolver", (int id, DateTime? fechaDevolucion, PrestamoService s) => { try { var fecha = fechaDevolucion ?? DateTime.Now; var ok = s.DevolverLibro(id, fecha); return ok ? Results.Ok() : Results.NotFound(); } catch (Exception ex) { return Results.BadRequest(ex.Message);} }).RequireAuthorization("prestamos.actualizar").WithTags("Préstamos");
+
+// Endpoints para Reportes (solo admin y bibliotecario)
+app.MapPost("/api/reportes/prestamos-por-fechas", (ReporteFechasDto dto, HttpContext http, ReporteService s) =>
+{
+    if (IsInRole(http, "socio")) return Results.Forbid();
+    
+    try
+    {
+        if (dto.FechaInicio > dto.FechaFin)
+            return Results.BadRequest("La fecha de inicio no puede ser mayor a la fecha de fin");
+        
+        var prestamos = s.GetPrestamosPorFechas(dto.FechaInicio, dto.FechaFin);
+        var estadisticas = s.GetEstadisticasPorFechas(dto.FechaInicio, dto.FechaFin);
+        
+        return Results.Ok(new { Prestamos = prestamos, Estadisticas = estadisticas });
+    }
+    catch (Exception ex)
+    {
+        return Results.BadRequest(ex.Message);
+    }
+}).RequireAuthorization("prestamos.leer").WithTags("Reportes");
 
 app.Run();
 
